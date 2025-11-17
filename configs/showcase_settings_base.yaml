@@ -1,0 +1,9 @@
+config:
+  BlockTest:
+    field1: hello
+    mode: fast
+  TestBlock:
+    field1: world
+chain:
+  - BlockTest
+  - TestBlock

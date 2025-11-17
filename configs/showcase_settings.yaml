@@ -1,0 +1,5 @@
+config:
+  BlockTest:
+    field1: hi
+  TestBlock:
+    field1: ivan
