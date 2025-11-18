@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from copy import deepcopy
 from typing import Any, Dict, Optional
 
-import prach.yaml as yaml
+import yaml
 from prach.pipeline import *
 
 
@@ -19,7 +19,7 @@ def load_yaml(path: pathlib.Path) -> Dict[str, Any]:
     with path.open("r", encoding="utf-8") as f:
         # TODO: replace with actual full-featured yaml module like PyYAML
         # or leave it as fallback
-        return yaml.load(f.read()) or {}
+        return yaml.safe_load(f.read()) or {}
 
 
 def deep_merge(a: Dict[str, Any], b: Dict[str, Any]) -> Dict[str, Any]:
