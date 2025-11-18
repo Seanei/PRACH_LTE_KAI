@@ -1,0 +1,26 @@
+[flake8]
+ignore = E501
+
+## Formatting
+
+# Select the formatter used to display errors to the user.
+format = default
+
+# Print the total number of errors.
+count = True
+# Print the source code generating the error/warning in question.
+show-source = True
+# Count the number of occurrences of each error/warning code and print a report.
+statistics = True
+
+## File patterns
+
+# Provide a comma-separated list of glob patterns to exclude from checks.
+exclude =
+    .git,
+    __pycache__,
+    .pytest_cache,
+    .venv
+# Provide a comma-separate list of glob patterns to include for checks.
+filename =
+    *.py
