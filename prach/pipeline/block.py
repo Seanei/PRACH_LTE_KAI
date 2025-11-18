@@ -22,10 +22,10 @@ class Block:
     Subclasses should define typed attributes (annotations). Any annotation
     whose name does not start with '_' is required and must be present
     in the YAML config for that block. Attributes starting with '_' are
-    internal and are not parsed from YAML
+    internal and are not parsed from YAML.
 
     The constructor will validate types, convert Enum values, and raise
-    on missing or invalid values
+    on missing or invalid values.
     """
 
     def __init__(self, config: Dict[str, Any]):
@@ -85,13 +85,40 @@ class Block:
                     if member.value == value:
                         return member
                 raise ValueError(f"Invalid enum value for field '{name}': {value}")
+
+        # primitive type checks
+        if base_type in (int, float, str, bool, dict, list):
+            if not isinstance(value, base_type):
+                # try conversions for common mismatches
+                try:
+                    if base_type is int:
+                        return int(value)
+                    if base_type is float:
+                        return float(value)
+                    if base_type is str:
+                        return str(value)
+                    if base_type is bool:
+                        if isinstance(value, str):
+                            if value.lower() in "true":
+                                return True
+                            if value.lower() == "false":
+                                return False
+                        return bool(value)
+                    if base_type is dict:
+                        if isinstance(value, dict):
+                            return value
+                        raise
+                    if base_type is list:
+                        if isinstance(value, list):
+                            return value
+                        raise
+                except Exception:
+                    raise ValueError(f"Field '{name}' expected {base_type} but got value {value} ({type(value)})")
             return value
 
         # generic fallback: check isinstance
         if not isinstance(value, base_type):
             raise ValueError(f"Field '{name}' expected {base_type} but got {type(value)}")
-        
-        # we expect yaml parser to handle primitive types itself
         return value
 
     def process(self, data: CommonData) -> CommonData:
