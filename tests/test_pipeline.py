@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, Any, Optional
 
-from prach.pipeline import *
+from prach.pipeline import CommonData, Block, BlockRegistry, Pipeline
 
 
 @dataclass(kw_only=True)

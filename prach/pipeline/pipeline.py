@@ -1,7 +1,7 @@
 from typing import Any, Dict, Optional
 
 from .common_data import CommonData
-from .block import BlockRegistry, Block
+from .block import BlockRegistry
 
 
 class Pipeline:

@@ -5,14 +5,13 @@
 import argparse
 import pathlib
 import pprint
-import sys
 from enum import Enum
 from dataclasses import dataclass, field
 from copy import deepcopy
 from typing import Any, Dict, Optional
 
 import yaml
-from prach.pipeline import *
+from prach.pipeline import CommonData, Block, BlockRegistry, Pipeline
 
 
 def load_yaml(path: pathlib.Path) -> Dict[str, Any]:

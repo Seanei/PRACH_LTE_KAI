@@ -1,18 +1,20 @@
 from __future__ import annotations
-from typing import Any, Dict, Type, Optional, get_type_hints
+from typing import Any, Dict, Type, get_type_hints
 from enum import Enum
+
+from .common_data import CommonData
 
 
 class BlockRegistry:
-    _registry: Dict[str, Type['Block']] = {}
+    _registry: Dict[str, Type["Block"]] = {}
 
     @classmethod
-    def register(cls, block_cls: Type['Block']):
+    def register(cls, block_cls: Type["Block"]):
         cls._registry[block_cls.__name__] = block_cls
         return block_cls
 
     @classmethod
-    def get(cls, name: str) -> Type['Block']:
+    def get(cls, name: str) -> Type["Block"]:
         return cls._registry[name]
 
 
@@ -33,16 +35,18 @@ class Block:
         hints = get_type_hints(cls, include_extras=False)
 
         # build set of fields that should be read from YAML (exclude private)
-        yaml_fields = [k for k in hints.keys() if not k.startswith('_')]
+        yaml_fields = [k for k in hints.keys() if not k.startswith("_")]
 
         # check missing keys
         for name in yaml_fields:
             if name not in config:
-                raise ValueError(f"Missing required field '{name}' for block {cls.__name__}")
+                raise ValueError(
+                    f"Missing required field '{name}' for block {cls.__name__}"
+                )
 
         # set attributes with validation/conversion
         for name, expected_type in hints.items():
-            if name.startswith('_'):
+            if name.startswith("_"):
                 # leave internal fields alone or use provided default
                 continue
             raw = config.get(name)
@@ -51,11 +55,11 @@ class Block:
 
     def _validate_and_convert(self, name: str, value: Any, expected_type: Type) -> Any:
         # handle Optional[T] (i.e., Union[T, None])
-        origin = getattr(expected_type, '__origin__', None)
+        origin = getattr(expected_type, "__origin__", None)
         if origin is None:
             base_type = expected_type
             allow_none = False
-        elif origin is getattr(__import__('typing'), 'Union'):
+        elif origin is getattr(__import__("typing"), "Union"):
             args = expected_type.__args__
             if type(None) in args and len(args) == 2:
                 allow_none = True
@@ -78,7 +82,7 @@ class Block:
                 return value
             # allow YAML to give string or int to map to enum
             try:
-                return base_type[value] # by enum name
+                return base_type[value]  # by enum name
             except Exception:
                 # try by value
                 for member in base_type:
@@ -113,15 +117,18 @@ class Block:
                             return value
                         raise
                 except Exception:
-                    raise ValueError(f"Field '{name}' expected {base_type} but got value {value} ({type(value)})")
+                    raise ValueError(
+                        f"Field '{name}' expected {base_type} but got value {value} ({type(value)})"
+                    )
             return value
 
         # generic fallback: check isinstance
         if not isinstance(value, base_type):
-            raise ValueError(f"Field '{name}' expected {base_type} but got {type(value)}")
+            raise ValueError(
+                f"Field '{name}' expected {base_type} but got {type(value)}"
+            )
         return value
 
     def process(self, data: CommonData) -> CommonData:
         """Override in subclass. Should return CommonData"""
         raise NotImplementedError
-    
