@@ -16,20 +16,18 @@ from prach.pipeline import CommonData, Block, BlockRegistry, Pipeline
 
 def load_yaml(path: pathlib.Path) -> Dict[str, Any]:
     with path.open("r", encoding="utf-8") as f:
-        # TODO: replace with actual full-featured yaml module like PyYAML
-        # or leave it as fallback
         return yaml.safe_load(f.read()) or {}
 
 
 def deep_merge(a: Dict[str, Any], b: Dict[str, Any]) -> Dict[str, Any]:
     """Return new dict that's a deep merge of a and b (b overrides a)"""
-    result = deepcopy(a)
+    merged = deepcopy(a)
     for k, v in b.items():
-        if k in result and isinstance(result[k], dict) and isinstance(v, dict):
-            result[k] = deep_merge(result[k], v)
+        if k in merged and isinstance(merged[k], dict) and isinstance(v, dict):
+            merged[k] = deep_merge(merged[k], v)
         else:
-            result[k] = deepcopy(v)
-    return result
+            merged[k] = deepcopy(v)
+    return merged
 
 
 def build_config_from_files(
@@ -66,14 +64,13 @@ class BlockTest(Block):
     _field2: Optional[str] = None
 
     def process(self, data: CommonData) -> CommonData:
-        # write something into the common data
         data.meta["BlockTest.field1"] = self.field1
         data.meta["BlockTest.mode"] = self.mode.value
-        # save state from all blocks
+
         prev = data.meta.get("combined", [])
         prev.append(self.field1)
         data.meta["combined"] = prev
-        # compute internal field
+
         self._field2 = f"computed-{self.field1}"
         data.meta["_field2"] = self._field2
         return data
@@ -84,7 +81,6 @@ class TestBlock(Block):
     field1: str
 
     def process(self, data: CommonData) -> CommonData:
-        # save state from all blocks
         prev = data.meta.get("combined", [])
         prev.append(self.field1)
         data.meta["combined"] = prev

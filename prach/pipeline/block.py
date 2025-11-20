@@ -34,20 +34,16 @@ class Block:
         cls = self.__class__
         hints = get_type_hints(cls, include_extras=False)
 
-        # build set of fields that should be read from YAML (exclude private)
         yaml_fields = [k for k in hints.keys() if not k.startswith("_")]
 
-        # check missing keys
         for name in yaml_fields:
             if name not in config:
                 raise ValueError(
                     f"Missing required field '{name}' for block {cls.__name__}"
                 )
 
-        # set attributes with validation/conversion
         for name, expected_type in hints.items():
             if name.startswith("_"):
-                # leave internal fields alone or use provided default
                 continue
             raw = config.get(name)
             value = self._validate_and_convert(name, raw, expected_type)
@@ -76,13 +72,11 @@ class Block:
                 return None
             raise ValueError(f"Field '{name}' is None but not Optional")
 
-        # enum handling
         if isinstance(base_type, type) and issubclass(base_type, Enum):
             if isinstance(value, base_type):
                 return value
-            # allow YAML to give string or int to map to enum
             try:
-                return base_type[value]  # by enum name
+                return base_type[value]
             except Exception:
                 # try by value
                 for member in base_type:
@@ -90,10 +84,8 @@ class Block:
                         return member
                 raise ValueError(f"Invalid enum value for field '{name}': {value}")
 
-        # primitive type checks
         if base_type in (int, float, str, bool, dict, list):
             if not isinstance(value, base_type):
-                # try conversions for common mismatches
                 try:
                     if base_type is int:
                         return int(value)
@@ -122,7 +114,6 @@ class Block:
                     )
             return value
 
-        # generic fallback: check isinstance
         if not isinstance(value, base_type):
             raise ValueError(
                 f"Field '{name}' expected {base_type} but got {type(value)}"

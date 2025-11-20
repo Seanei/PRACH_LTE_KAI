@@ -68,7 +68,6 @@ class BadBlock(Block):
         return "wrong"
 
 
-# register them globally for pipeline to find
 BlockRegistry.register(MyBlock)
 BlockRegistry.register(AppendBlock)
 BlockRegistry.register(BadBlock)

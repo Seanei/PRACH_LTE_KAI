@@ -6,14 +6,12 @@ from .block import BlockRegistry
 
 class Pipeline:
     def __init__(self, config: Dict[str, Any]):
-        # config expected shape: { 'config': { BlockName: { ... }, ... }, 'chain': [BlockName, ...] }
         cfg = config.get("config", {})
         self.chain = config.get(
             "chain", list(cfg.keys())
-        )  # default chain order is config key order
+        )
         self.cfg = cfg
 
-        # instantiate blocks in chain order
         self.blocks = []
         for block_name in self.chain:
             block_cfg = cfg.get(block_name, {})
