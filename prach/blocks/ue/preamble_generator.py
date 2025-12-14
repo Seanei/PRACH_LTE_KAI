@@ -1,7 +1,7 @@
 import math
 import random
 
-from prach.pipeline import CommonData, Block, BlockRegistry, Pipeline
+from prach.pipeline import CommonData, Block, BlockRegistry
 from prach.math import zadoff_chu
 
 # 3GPP TS 136.211: Table 5.7.2-1
@@ -220,7 +220,7 @@ class PreambleGeneratorBlock(Block):
         # perform the cyclic shift
         for i in range(c_v):
             zadoff_chu_seq.append(zadoff_chu_seq.pop(0))
-        
+
         data.meta["root_sequence_index"] = self.root_sequence_index
         data.meta["generated_preamble"] = zadoff_chu_seq
 

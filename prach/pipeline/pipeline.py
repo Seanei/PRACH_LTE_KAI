@@ -7,9 +7,7 @@ from .block import BlockRegistry
 class Pipeline:
     def __init__(self, config: Dict[str, Any]):
         cfg = config.get("config", {})
-        self.chain = config.get(
-            "chain", list(cfg.keys())
-        )
+        self.chain = config.get("chain", list(cfg.keys()))
         self.cfg = cfg
 
         self.blocks = []
