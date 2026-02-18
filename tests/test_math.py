@@ -7,13 +7,13 @@ class TestZadoffChu(unittest.TestCase):
     def test_length(self):
         n_zc = 63
         root = 25
-        seq = zadoff_chu(n_zc, root)
+        seq = zadoff_chu(root, n_zc)
         self.assertEqual(len(seq), n_zc)
 
     def test_constant_magnitude(self):
         n_zc = 63
         root = 29
-        seq = zadoff_chu(n_zc, root)
+        seq = zadoff_chu(root, n_zc)
 
         magnitudes = [abs(x) for x in seq]
         # All magnitudes should be 1 within numerical tolerance
@@ -23,8 +23,8 @@ class TestZadoffChu(unittest.TestCase):
     def test_deterministic(self):
         n_zc = 139
         root = 7
-        seq1 = zadoff_chu(n_zc, root)
-        seq2 = zadoff_chu(n_zc, root)
+        seq1 = zadoff_chu(root, n_zc)
+        seq2 = zadoff_chu(root, n_zc)
         self.assertEqual(seq1, seq2)
 
     def test_multiple_roots(self):
@@ -60,7 +60,7 @@ class TestZadoffChu(unittest.TestCase):
         # Check that the phase increments match ZC formula
         n_zc = 63
         root = 25
-        seq = zadoff_chu(n_zc, root)
+        seq = zadoff_chu(root, n_zc)
 
         # Verify ratio seq[k+1] / seq[k] has magnitude 1
         for k in range(n_zc - 1):

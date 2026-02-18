@@ -6,7 +6,7 @@ from typing import List
 __all__ = ["zadoff_chu"]
 
 
-def zadoff_chu(n_zc: int, root: int) -> List[complex]:
+def zadoff_chu(root: int, n_zc: int) -> List[complex]:
     """Zadoff-Chu sequence is a complex-valued mathematical sequence which, when applied to a signal,
     gives rise to a new signal of constant amplitude. When cyclically shifted versions
     of a Zadoff-Chu sequence are imposed upon a signal the resulting set of signals
@@ -25,13 +25,10 @@ def zadoff_chu(n_zc: int, root: int) -> List[complex]:
         raise ValueError("'root' must be coprime with 'n_zc'")
 
     sequence = [0j] * n_zc
-    cf = 0
     phase = 0
 
     for n in range(n_zc):
-        cf = n % 2
-
-        phase = (-math.pi * root * n * (n + cf)) / n_zc
-        sequence[n] = cmath.exp(1j * phase)
+        phase = (-1j * math.pi * root * n * (n + 1)) / n_zc
+        sequence[n] = cmath.exp(phase)
 
     return sequence
