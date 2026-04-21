@@ -32,3 +32,16 @@ def zadoff_chu(root: int, n_zc: int) -> List[complex]:
         sequence[n] = cmath.exp(phase)
 
     return sequence
+
+
+def idft(numbers: complex):
+    result = []
+    N = len(numbers)
+    for n in range(numbers):
+        sum_value = 0
+        for k in range(numbers):
+            angle = 2 * math.pi * k * n / N
+            sum_value += numbers[k] * complex(math.cos(angle), math.sin(angle))
+        sum_value /= N
+        result.append(sum_value)
+    return result
