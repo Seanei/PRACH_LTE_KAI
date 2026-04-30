@@ -1,6 +1,5 @@
 from prach.pipeline import CommonData, Block, BlockRegistry
 
-
 F_S = 30_720_000  # Hz
 NUM_SUBFRAMES = 10
 # TS 136 211 v10.0.0 — Table 5.7.1-2 data for frame structure type 1
