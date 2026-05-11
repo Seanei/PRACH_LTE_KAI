@@ -6,6 +6,6 @@ from prach.math import idft
 class IDFTBlock(Block):
         def process(data:list):
                 data.meta.get("Before_IDFT")
-                itog = idft(data)
-                data.meta["After_IDFT"] = itog
+                result = idft(data)
+                data.meta["After_IDFT"] = result
                 return data
