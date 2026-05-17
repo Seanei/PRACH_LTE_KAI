@@ -39,7 +39,7 @@ class SubcarrierMappingBlock(Block):
         spectrum = np.zeros(n_fft, dtype=complex)
 
         # Insert PRACH subcarriers into LTE grid
-        spectrum[k_start : k_start + N_ZC_FDD] = frequencies
+        spectrum[k_start:k_start + N_ZC_FDD] = frequencies
 
         data.meta["Subcarrier_Mapping"] = spectrum
 
