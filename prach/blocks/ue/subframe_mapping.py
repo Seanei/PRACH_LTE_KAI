@@ -114,4 +114,3 @@ class SubframeMappingBlock(Block):
 
         data.meta["frame_signal"] = frame_signal
         return data
-    
