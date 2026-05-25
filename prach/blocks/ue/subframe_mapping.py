@@ -76,6 +76,7 @@ SUBFRAME_CONFIG = [
 NUM_SF = [1, 2, 2, 3]
 # fmt: on
 
+
 @BlockRegistry.register
 class SubframeMappingBlock(Block):
     sf_n: int = 0
@@ -87,7 +88,7 @@ class SubframeMappingBlock(Block):
         self.config_index = data.meta.get("config_index", self.config_index)
         self.preamble_format = data.meta.get("preamble_format", self.preamble_format)
 
-        preamble = np.array(data.meta.get("ready_preamble", []), dtype = np.complex128)
+        preamble = np.array(data.meta.get("ready_preamble", []), dtype=np.complex128)
         samples_per_subframe = int(F_S * 1e-3)
         sf_n_cond = SUBFRAME_CONFIG[self.config_index][0]
 
@@ -96,7 +97,7 @@ class SubframeMappingBlock(Block):
 
         start_sf = SUBFRAME_CONFIG[self.config_index][1][0]
         num_sf = NUM_SF[self.preamble_format]
-        frame_signal = np.zeros((NUM_SUBFRAMES, samples_per_subframe), dtype = np.complex128)
+        frame_signal = np.zeros((NUM_SUBFRAMES, samples_per_subframe), dtype=np.complex128)
 
         if start_sf + num_sf > NUM_SUBFRAMES:
             fit_in_current = NUM_SUBFRAMES - start_sf
@@ -113,4 +114,3 @@ class SubframeMappingBlock(Block):
 
         data.meta["frame_signal"] = frame_signal
         return data
-
