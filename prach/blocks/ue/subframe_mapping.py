@@ -76,7 +76,6 @@ SUBFRAME_CONFIG = [
 NUM_SF = [1, 2, 2, 3]
 # fmt: on
 
-
 @BlockRegistry.register
 class SubframeMappingBlock(Block):
     sf_n: int = 0
@@ -88,33 +87,16 @@ class SubframeMappingBlock(Block):
         self.config_index = data.meta.get("config_index", self.config_index)
         self.preamble_format = data.meta.get("preamble_format", self.preamble_format)
 
-        preamble = np.array(data.meta.get("ready_preamble", []), dtype=np.complex128)
-
+        preamble = np.array(data.meta.get("ready_preamble", []), dtype = np.complex128)
         samples_per_subframe = int(F_S * 1e-3)
-
         sf_n_cond = SUBFRAME_CONFIG[self.config_index][0]
+
         if sf_n_cond != 1 and self.sf_n % 2 != 0:
             return None
 
         start_sf = SUBFRAME_CONFIG[self.config_index][1][0]
         num_sf = NUM_SF[self.preamble_format]
-
         frame_signal = np.zeros((NUM_SUBFRAMES, samples_per_subframe), dtype = np.complex128)
-
-        if start_sf + num_sf > NUM_SUBFRAMES:
-            fit_in_current = NUM_SUBFRAMES - start_sf
-            for i in range(fit_in_current):
-                frame_signal[start_sf + i] = preamble[i * samples_per_subframe :(i + 1) * samples_per_subframe]
-            data.meta["carry_over_preamble"] = preamble[fit_in_current * samples_per_subframe:]
-            for i in range(num_sf):
-                frame_signal[start_sf + i] = preamble[i * samples_per_subframe :(i + 1) * samples_per_subframe]
-
-        data.meta["frame_signal"] = frame_signal
-        return data
-
-        expected_len = num_sf * samples_per_subframe
-        if len(preamble) > expected_len:
-            return None
 
         for i in range(num_sf):
             start_idx = i * samples_per_subframe
@@ -123,5 +105,5 @@ class SubframeMappingBlock(Block):
             frame_signal[start_sf + i, :len(chunk)] = chunk
 
         data.meta["frame_signal"] = frame_signal
-
         return data
+
