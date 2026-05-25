@@ -116,18 +116,11 @@ class SubframeMappingBlock(Block):
         if len(preamble) > expected_len:
             return None
 
-        preamble_chunks = [
-            preamble[i * samples_per_subframe:(i + 1) * samples_per_subframe]
-            for i in range(num_sf)
-        ]
-
-    
-
         for i in range(num_sf):
-            start_idx = i*samples_per_subframe
-            end_idx = start_idx+samples_per_subframe
+            start_idx = i * samples_per_subframe
+            end_idx = start_idx + samples_per_subframe
             chunk = preamble[start_idx:end_idx]
-            frame_signal[start_sf + i, :len(chunk)] = chunk
+            frame_signal[start_sf + i,:len(chunk)] = chunk
 
         data.meta["frame_signal"] = frame_signal
 
