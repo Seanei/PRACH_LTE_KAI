@@ -31,7 +31,6 @@ class SubcarrierMappingBlock(Block):
 
         # Relative PRACH offset from central carrier
         k0 = self.n_ra_prb_offset * N_RB_SC - (self.n_ul_rb * N_RB_SC) / 2
-
         # Start index of PRACH placement
         k_start = int(n_fft // 2 + self.phi + K * (k0 + 0.5))
 
@@ -42,5 +41,5 @@ class SubcarrierMappingBlock(Block):
         spectrum[k_start:k_start + N_ZC_FDD] = frequencies
 
         data.meta["Subcarrier_Mapping"] = spectrum
-
+    
         return data
