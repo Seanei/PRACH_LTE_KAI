@@ -98,6 +98,13 @@ class SubframeMappingBlock(Block):
         num_sf = NUM_SF[self.preamble_format]
         frame_signal = np.zeros((NUM_SUBFRAMES, samples_per_subframe), dtype = np.complex128)
 
+        if start_sf + num_sf > NUM_SUBFRAMES:
+            fit_in_current = NUM_SUBFRAMES - start_sf
+            for i in range(fit_in_current):
+                frame_signal[start_sf + i] = preamble[i * samples_per_subframe:(i + 1) * samples_per_subframe]
+            data.meta["carry_over_preamble"] = preamble[fit_in_current * samples_per_subframe:]
+            num_sf = fit_in_current
+
         for i in range(num_sf):
             start_idx = i * samples_per_subframe
             end_idx = start_idx + samples_per_subframe
