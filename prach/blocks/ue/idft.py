@@ -4,8 +4,8 @@ from prach.math import idft
 
 @BlockRegistry.register
 class IDFTBlock(Block):
-    def process(data: list):
-        data.meta.get("Before_IDFT")
-        result = idft(data)
+    def process(self, data: CommonData) -> CommonData:
+        After_submap = data.meta.get("Before_IDFT")
+        result = idft(After_submap)
         data.meta["After_IDFT"] = result
         return data
