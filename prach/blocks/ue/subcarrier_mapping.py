@@ -41,5 +41,5 @@ class SubcarrierMappingBlock(Block):
         spectrum[k_start:k_start + N_ZC_FDD] = frequencies
 
         data.meta["Subcarrier_Mapping"] = spectrum
-    
+
         return data

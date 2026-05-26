@@ -66,7 +66,7 @@ class TestSubcarrierMapping(unittest.TestCase):
             data.meta.get("Subcarrier_Mapping", []),
             dtype=complex
         )
-        
+
         tolerance = 1e-7
 
         error_vector = np.abs(
@@ -84,18 +84,17 @@ class TestSubcarrierMapping(unittest.TestCase):
 
         self.assertTrue(
             np.allclose(
-            python_output,
-            self.reference_output,
-            atol=tolerance
-        ),
-        "Subcarrier Mapping differs from MATLAB reference"
-    )
+                python_output,
+                self.reference_output,
+                atol=tolerance
+            ),
+            "Subcarrier Mapping differs from MATLAB reference"
+        )
 
     def test_mapping(self):
 
         self.perform_test()
-    
+
 
 if __name__ == "__main__":
     unittest.main()
-
