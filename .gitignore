@@ -10,5 +10,3 @@
 
 # Temporary verification files
 prach/blocks/ue/*.txt
-tests/input_data.txt
-tests/output_data.txt
