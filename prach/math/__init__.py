@@ -1,5 +1,6 @@
 import math
 import cmath
+import numpy as np
 from typing import List
 
 
@@ -32,3 +33,18 @@ def zadoff_chu(root: int, n_zc: int) -> List[complex]:
         sequence[n] = cmath.exp(phase)
 
     return sequence
+
+
+def dft(x):
+
+    N = len(x)
+    X = np.zeros(N, dtype=complex)
+
+    for k in range(N):
+        s = 0j
+        for n in range(N):
+            angle = -2 * math.pi * k * n / N
+            s += x[n] * cmath.exp(1j * angle)
+        X[k] = s
+
+    return X
