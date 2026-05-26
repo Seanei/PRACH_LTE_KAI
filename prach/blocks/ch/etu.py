@@ -23,21 +23,21 @@ snr_table = {
 }
 
 
-def etu70_channel(signal,rx_antennas,burst_format,sample_rate):
+def etu70_channel(signal, rx_antennas, burst_format, sample_rate):
 
     snr_db = snr_table[rx_antennas][burst_format]
 
     path_delays_ns = [
-    0,
-    50,
-    120,
-    200,
-    230,
-    500,
-    1600,
-    2300,
-    5000
-]
+        0,
+        50,
+        120,
+        200,
+        230,
+        500,
+        1600,
+        2300,
+        5000
+    ]
 
     path_gains_db = [
         -1.0,
@@ -51,7 +51,6 @@ def etu70_channel(signal,rx_antennas,burst_format,sample_rate):
         -7.0
     ]
 
-
     path_delays_samples = []
     for delay_ns in path_delays_ns:
 
@@ -62,7 +61,6 @@ def etu70_channel(signal,rx_antennas,burst_format,sample_rate):
         )
 
         path_delays_samples.append(delay_samples)
-
 
     freq_offset = 270
     shifted_signal = []
@@ -77,7 +75,6 @@ def etu70_channel(signal,rx_antennas,burst_format,sample_rate):
 
         shifted_signal.append(shifted)
 
-
     faded_signal = np.zeros(len(signal), dtype=complex)
     doppler_freq = 70
 
@@ -90,9 +87,6 @@ def etu70_channel(signal,rx_antennas,burst_format,sample_rate):
         gain = 10 ** (gain_db / 20)
 
         phi = random.uniform(0, 2 * math.pi)
-
-
-
 
         h_real = random.gauss(0, 1)
         h_imag = random.gauss(0, 1)
@@ -110,14 +104,12 @@ def etu70_channel(signal,rx_antennas,burst_format,sample_rate):
 
                 faded_signal[n] += (gain * h_doppler * shifted_signal[delayed_index])
 
-
     signal_power = 0
     for x in faded_signal:
 
         signal_power += abs(x) ** 2
 
     signal_power = signal_power / len(faded_signal)
-
 
     snr_linear = 10**(snr_db / 10)
 

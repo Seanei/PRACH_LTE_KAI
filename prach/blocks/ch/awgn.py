@@ -20,6 +20,7 @@ snr_table = {
     }
 }
 
+
 def awgn(signal, rx_antennas, burst_format):
 
     snr_db = snr_table[rx_antennas][burst_format]
