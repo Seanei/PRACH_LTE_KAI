@@ -37,9 +37,9 @@ def zadoff_chu(root: int, n_zc: int) -> List[complex]:
 def idft(numbers: complex):
     result = []
     N = len(numbers)
-    for n in range(numbers):
+    for n in range(N):
         sum_value = 0
-        for k in range(numbers):
+        for k in range(N):
             angle = 2 * math.pi * k * n / N
             sum_value += numbers[k] * complex(math.cos(angle), math.sin(angle))
         sum_value /= N
