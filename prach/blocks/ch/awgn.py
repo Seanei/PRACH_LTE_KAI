@@ -1,5 +1,6 @@
 import math
 import random
+import numpy as np
 
 
 snr_table = {
@@ -37,19 +38,16 @@ def awgn(signal, rx_antennas, burst_format):
     noise_power = signal_power / snr_linear
     noise_std = math.sqrt(noise_power / 2)
 
-    rx_signal = []
+    rx_signal = np.zeros(len(signal), dtype=complex)
 
-    for x in signal:
+    for n, x in enumerate(signal):
 
         noise_real = random.gauss(0, noise_std)
 
         noise_imag = random.gauss(0, noise_std)
 
-        noise = complex(
-            noise_real,
-            noise_imag
-        )
+        noise = complex(noise_real, noise_imag)
 
-        rx_signal.append(x + noise)
+        rx_signal[n] = x + noise
 
     return rx_signal

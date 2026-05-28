@@ -7,18 +7,18 @@ import random
 snr_table = {
     2: {
         0: -8.0,
-        1: -10.0,
-        2: -11.2,
-        3: -11.4,
-        4: -4.2
+        1: -7.8,
+        2: -10.0,
+        3: -10.1,
+        4: -0.1
     },
 
     4: {
-        0: -10.4,
-        1: -12.2,
-        2: -13.5,
-        3: -13.7,
-        4: -5.8
+        0: -12.1,
+        1: -11.7,
+        2: -14.1,
+        3: -13.9,
+        4: -5.1
     }
 }
 
@@ -51,29 +51,14 @@ def etu70_channel(signal, rx_antennas, burst_format, sample_rate):
         -7.0
     ]
 
-    path_delays_samples = []
-    for delay_ns in path_delays_ns:
+    path_delays_samples = np.zeros(len(path_delays_ns), dtype=int)
+    for i, delay_ns in enumerate(path_delays_ns):
 
         delay_seconds = delay_ns * 1e-9
 
-        delay_samples = int(
-            delay_seconds * sample_rate
-        )
+        delay_samples = int(delay_seconds * sample_rate)
 
-        path_delays_samples.append(delay_samples)
-
-    freq_offset = 270
-    shifted_signal = []
-
-    for n in range(len(signal)):
-
-        t = n / sample_rate
-
-        phase = 2 * math.pi * freq_offset * t
-
-        shifted = signal[n] * cmath.exp(1j * phase)
-
-        shifted_signal.append(shifted)
+        path_delays_samples[i] = delay_samples
 
     faded_signal = np.zeros(len(signal), dtype=complex)
     doppler_freq = 70
@@ -102,22 +87,35 @@ def etu70_channel(signal, rx_antennas, burst_format, sample_rate):
 
                 h_doppler = h * cmath.exp(1j * doppler_phase)
 
-                faded_signal[n] += (gain * h_doppler * shifted_signal[delayed_index])
+                faded_signal[n] += (gain * h_doppler * signal[delayed_index])
+
+    freq_offset = 270
+    shifted_signal = np.zeros(len(signal), dtype=complex)
+
+    for n in range(len(signal)):
+
+        t = n / sample_rate
+
+        phase = 2 * math.pi * freq_offset * t
+
+        shifted = faded_signal[n] * cmath.exp(1j * phase)
+
+        shifted_signal[n] = shifted
 
     signal_power = 0
-    for x in faded_signal:
+    for x in shifted_signal:
 
         signal_power += abs(x) ** 2
 
-    signal_power = signal_power / len(faded_signal)
+    signal_power = signal_power / len(shifted_signal)
 
     snr_linear = 10**(snr_db / 10)
 
     noise_power = signal_power / snr_linear
     noise_std = math.sqrt(noise_power / 2)
 
-    rx_signal = []
-    for x in faded_signal:
+    rx_signal = np.zeros(len(shifted_signal), dtype=complex)
+    for n, x in enumerate(shifted_signal):
 
         noise_real = random.gauss(0, noise_std)
 
@@ -125,6 +123,6 @@ def etu70_channel(signal, rx_antennas, burst_format, sample_rate):
 
         noise = complex(noise_real, noise_imag)
 
-        rx_signal.append(x + noise)
+        rx_signal[n] = x + noise
 
     return rx_signal
