@@ -5,8 +5,11 @@ from prach.blocks.ue.subframe_mapping import SubframeMappingBlock
 
 
 class MockCommonData:
+
+
     def __init__(self):
         self.meta = {}
+
 
 F_S = 30.72e6
 NUM_SUBFRAMES = 10
@@ -17,13 +20,13 @@ SAMPLES_PER_SF = int(F_S * 1e-3)
     "config_index, preamble_format, sf_n, start_sf, num_sf",
     [
         # (config_index, preamble_format, номер фрейма, с какого сабфрейма начинается, длина)
-        (3, 0, 0, 1, 1), # формат 0
-        (19, 1, 1, 1, 2), # формат 1
-        (35, 2, 0, 2, 2), # формат 2
-        (48, 3, 1, 1, 3), # формат 3
+        (3, 0, 0, 1, 1),  # формат 0
+        (19, 1, 1, 1, 2),  # формат 1
+        (35, 2, 0, 2, 2),  # формат 2
+        (48, 3, 1, 1, 3),  # формат 3
         (31, 1, 0, 9, 2),  # случай с переносом в следующий фрейм для формата 1
-        (42, 2, 0, 5, 2), # формат 2
-        (56, 3, 0, 8, 3), # случай с переполнением для формата 3
+        (42, 2, 0, 5, 2),  # формат 2
+        (56, 3, 0, 8, 3),  # случай с переполнением для формата 3
     ]
 )
 def test_subframe_mapping_valid_configs(config_index, preamble_format, sf_n, start_sf, num_sf):
@@ -57,6 +60,7 @@ def test_subframe_mapping_valid_configs(config_index, preamble_format, sf_n, sta
         if not (start_sf <= sf_idx < start_sf + fit_in_current):
             chunk = frame_signal[sf_idx]
             assert np.all(chunk == 0j), f"Сабфрейм {sf_idx} должен быть пустым"
+
 
 def test_subframe_mapping_invalid_sfn():
     block = SubframeMappingBlock()
