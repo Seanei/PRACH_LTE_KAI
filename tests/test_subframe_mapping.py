@@ -6,7 +6,6 @@ from prach.blocks.ue.subframe_mapping import SubframeMappingBlock
 
 class MockCommonData:
 
-
     def __init__(self):
         self.meta = {}
 
