@@ -6,3 +6,6 @@ __all__ = [
     "PreambleGeneratorBlock",
     "SubcarrierMappingBlock",
 ]
+from .idft import IDFTBlock
+
+__all__ = ["PreambleGeneratorBlock", "IDFTBlock"]
