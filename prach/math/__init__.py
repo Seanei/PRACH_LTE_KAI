@@ -1,5 +1,6 @@
 import math
 import cmath
+import numpy as np
 from typing import List
 
 __all__ = ["zadoff_chu"]
@@ -31,3 +32,16 @@ def zadoff_chu(root: int, n_zc: int) -> List[complex]:
         sequence[n] = cmath.exp(phase)
 
     return sequence
+
+
+def idft(numbers: complex):
+    N = len(numbers)
+    result = np.zeros(N, dtype=complex)
+    for n in range(N):
+        sum_value = 0
+        for k in range(N):
+            angle = 2 * math.pi * k * n / N
+            sum_value += numbers[k] * complex(math.cos(angle), math.sin(angle))
+        sum_value /= N
+        result[n] = sum_value
+    return result
