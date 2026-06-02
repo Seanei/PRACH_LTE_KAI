@@ -181,6 +181,7 @@ class TestDFT(unittest.TestCase):
                 for a, e in zip(actual, expected):
                     self.assertComplexAlmostEqual(a, e)
 
+
 class TestIDFT(unittest.TestCase):
     def assertComplexAlmostEqual(self, actual, expected, places=12):
         self.assertAlmostEqual(actual.real, expected.real, places=places)
