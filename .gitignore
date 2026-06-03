@@ -7,3 +7,6 @@
 
 # Python cache files
 **/__pycache__
+
+# Temporary verification files
+prach/blocks/ue/*.txt
