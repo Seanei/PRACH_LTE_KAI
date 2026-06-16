@@ -8,9 +8,17 @@ def test_simple_subframe_demapping_without_carry_over():
     seq_len = 500
     samples_per_subframe = int(F_S * 1e-3) 
     
+    my_config = {
+        "config_index": 0,
+        "preamble_format": 0,
+        "cp_length": cp_len,
+        "sequence_length": seq_len
+    }
+
     block = SubframeDemappingBlock(
-        config_index=0,       
-        preamble_format=0,    
+        config=my_config,
+        config_index=0,
+        preamble_format=0,
         cp_length=cp_len,
         sequence_length=seq_len
     )
@@ -84,5 +92,4 @@ def test_subframe_demapping_with_carry_over():
     expected_clean = full_mock_window[cp_len : cp_len + seq_len]
     
     np.testing.assert_array_equal(extracted_preamble, expected_clean)
-    assert block._carry_over is None, "После склеивания carry-over должен очиститься!"
-    
+    assert block._carry_over is None, "После склеивания carry-over должен быть пустым"
