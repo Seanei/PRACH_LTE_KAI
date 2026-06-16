@@ -3,29 +3,10 @@ import math
 import cmath
 import random
 
-
-snr_table = {
-    2: {
-        0: -8.0,
-        1: -7.8,
-        2: -10.0,
-        3: -10.1,
-        4: -0.1
-    },
-
-    4: {
-        0: -12.1,
-        1: -11.7,
-        2: -14.1,
-        3: -13.9,
-        4: -5.1
-    }
-}
+from .awgn import awgn
 
 
-def etu70_channel(signal, rx_antennas, burst_format, sample_rate):
-
-    snr_db = snr_table[rx_antennas][burst_format]
+def etu70_channel(signal, rx_antennas, burst_format, sample_rate, snr_db, doppler_freq, freq_offset):
 
     path_delays_ns = [
         0,
@@ -61,7 +42,6 @@ def etu70_channel(signal, rx_antennas, burst_format, sample_rate):
         path_delays_samples[i] = delay_samples
 
     faded_signal = np.zeros(len(signal), dtype=complex)
-    doppler_freq = 70
 
     for path_index in range(len(path_delays_samples)):
 
@@ -75,7 +55,7 @@ def etu70_channel(signal, rx_antennas, burst_format, sample_rate):
 
         h_real = random.gauss(0, 1)
         h_imag = random.gauss(0, 1)
-        h = complex(h_real, h_imag) / math.sqrt(2)
+        h = complex(h_real, h_imag) / np.sqrt(2)
 
         for n in range(len(signal)):
 
@@ -89,7 +69,6 @@ def etu70_channel(signal, rx_antennas, burst_format, sample_rate):
 
                 faded_signal[n] += (gain * h_doppler * signal[delayed_index])
 
-    freq_offset = 270
     shifted_signal = np.zeros(len(signal), dtype=complex)
 
     for n in range(len(signal)):
@@ -102,27 +81,4 @@ def etu70_channel(signal, rx_antennas, burst_format, sample_rate):
 
         shifted_signal[n] = shifted
 
-    signal_power = 0
-    for x in shifted_signal:
-
-        signal_power += abs(x) ** 2
-
-    signal_power = signal_power / len(shifted_signal)
-
-    snr_linear = 10**(snr_db / 10)
-
-    noise_power = signal_power / snr_linear
-    noise_std = math.sqrt(noise_power / 2)
-
-    rx_signal = np.zeros(len(shifted_signal), dtype=complex)
-    for n, x in enumerate(shifted_signal):
-
-        noise_real = random.gauss(0, noise_std)
-
-        noise_imag = random.gauss(0, noise_std)
-
-        noise = complex(noise_real, noise_imag)
-
-        rx_signal[n] = x + noise
-
-    return rx_signal
+    return awgn(shifted_signal, snr_db=snr_db)
