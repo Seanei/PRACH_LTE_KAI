@@ -5,7 +5,7 @@ from prach.pipeline import CommonData, Block, BlockRegistry
 F_S = 30_720_000
 NUM_SUBFRAMES = 10
 
-# TS 136 211 v10.0.0 - Table 5.7.1-2 
+# TS 136 211 v10.0.0 - Table 5.7.1-2
 SUBFRAME_CONFIG = [
     [0, [1]],
     [0, [4]],
@@ -93,13 +93,13 @@ class SubframeDemappingBlock(Block):
         self.sf_n = data.meta.get("sf_n", self.sf_n)
         self.config_index = data.meta.get("config_index", self.config_index)
         self.preamble_format = data.meta.get("preamble_format", self.preamble_format)
-        
+
         self.cp_length = data.meta.get("cp_length", self.cp_length)
         self.sequence_length = data.meta.get("sequence_length", self.sequence_length)
 
         frame_signal = np.array(data.meta.get("frame_signal"), dtype=np.complex128)
         num_sf = NUM_SF[self.preamble_format]
-        
+
         prach_windows = []
 
         if self._carry_over is not None:
@@ -107,7 +107,9 @@ class SubframeDemappingBlock(Block):
             tail = frame_signal[:remaining_sf].flatten()
             full_window = np.concatenate([self._carry_over, tail])
 
-            clean_preamble = full_window[self.cp_length : self.cp_length + self.sequence_length]
+            clean_preamble = full_window[
+                self.cp_length : self.cp_length + self.sequence_length
+            ]
             prach_windows.append((self._carry_over_start_sf, clean_preamble))
 
             self._carry_over = None
@@ -123,7 +125,9 @@ class SubframeDemappingBlock(Block):
 
                     if end_sf <= NUM_SUBFRAMES:
                         full_window = frame_signal[start_sf:end_sf].flatten()
-                        clean_preamble = full_window[self.cp_length : self.cp_length + self.sequence_length]
+                        clean_preamble = full_window[
+                            self.cp_length : self.cp_length + self.sequence_length
+                        ]
                         prach_windows.append((start_sf, clean_preamble))
 
                     else:
@@ -134,7 +138,6 @@ class SubframeDemappingBlock(Block):
         if not prach_windows and self._carry_over is None:
             return None
 
-        data.meta["prach_windows"] = prach_windows  
+        data.meta["prach_windows"] = prach_windows
         data.meta["carry_over_prach"] = self._carry_over
         return data
-    
