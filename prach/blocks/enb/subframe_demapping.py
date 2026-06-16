@@ -108,7 +108,7 @@ class SubframeDemappingBlock(Block):
             full_window = np.concatenate([self._carry_over, tail])
 
             clean_preamble = full_window[
-                self.cp_length : self.cp_length + self.sequence_length
+                self.cp_length: self.cp_length + self.sequence_length
             ]
             prach_windows.append((self._carry_over_start_sf, clean_preamble))
 
@@ -126,7 +126,7 @@ class SubframeDemappingBlock(Block):
                     if end_sf <= NUM_SUBFRAMES:
                         full_window = frame_signal[start_sf:end_sf].flatten()
                         clean_preamble = full_window[
-                            self.cp_length : self.cp_length + self.sequence_length
+                            self.cp_length: self.cp_length + self.sequence_length
                         ]
                         prach_windows.append((start_sf, clean_preamble))
 
