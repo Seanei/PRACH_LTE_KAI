@@ -36,9 +36,7 @@ class SubcarrierDemappingBlock(Block):
         n_fft = int(F_S / self.delta_f_ra)
 
         # Relative PRACH offset from central carrier
-        k0 = ( self.n_ra_prb_offset * N_RB_SC
-            - (self.n_ul_rb * N_RB_SC) / 2
-        )
+        k0 = self.n_ra_prb_offset * N_RB_SC - (self.n_ul_rb * N_RB_SC) / 2
 
         # Start index of PRACH extraction
         k_start = int(
@@ -52,4 +50,3 @@ class SubcarrierDemappingBlock(Block):
         data.meta["Subcarrier_Demapping"] = prach_bins
 
         return data
-    
