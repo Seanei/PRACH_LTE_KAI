@@ -37,7 +37,7 @@ class TestSubframeDemapping(unittest.TestCase):
             NUM_SUBFRAMES, samples_per_subframe
         ) + 1j * np.random.randn(NUM_SUBFRAMES, samples_per_subframe)
         expected_preamble = np.ones(seq_len, dtype=np.complex128) * (5 + 5j)
-        frame_signal[1, cp_len : cp_len + seq_len] = expected_preamble
+        frame_signal[1, cp_len:cp_len + seq_len] = expected_preamble
         data.meta["frame_signal"] = frame_signal
 
         output_data = block.process(data)
@@ -77,7 +77,7 @@ class TestSubframeDemapping(unittest.TestCase):
         ) + 1j * np.random.randn(NUM_SUBFRAMES, samples_per_subframe)
 
         combined_window = np.concatenate([frame_1[9], frame_2[0]])
-        combined_window[cp_len : cp_len + seq_len] = expected_preamble
+        combined_window[cp_len:cp_len + seq_len] = expected_preamble
 
         frame_1[9] = combined_window[:samples_per_subframe]
         frame_2[0] = combined_window[samples_per_subframe:]
