@@ -105,10 +105,10 @@ class SubframeMappingBlock(Block):
             fit_in_current = NUM_SUBFRAMES - start_sf
             for i in range(fit_in_current):
                 frame_signal[start_sf + i] = preamble[
-                    i * samples_per_subframe : (i + 1) * samples_per_subframe
+                    i * samples_per_subframe:(i + 1) * samples_per_subframe
                 ]
             data.meta["carry_over_preamble"] = preamble[
-                fit_in_current * samples_per_subframe :
+                fit_in_current * samples_per_subframe:
             ]
             num_sf = fit_in_current
 
