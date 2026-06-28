@@ -1,12 +1,31 @@
 import numpy as np
 import math
 import cmath
-import random
 
 from .awgn import awgn
 
+snr_table = {
+    2: {
+        0: -8.0,
+        1: -7.8,
+        2: -10.0,
+        3: -10.1,
+        4: -0.1
+    },
 
-def etu70_channel(signal, rx_antennas, burst_format, sample_rate, snr_db, doppler_freq, freq_offset):
+    4: {
+        0: -12.1,
+        1: -11.7,
+        2: -14.1,
+        3: -13.9,
+        4: -5.1
+    }
+}
+
+
+def etu_channel(signal, rx_antennas, burst_format, sample_rate, doppler_freq, freq_offset):
+
+    snr_db = snr_table[rx_antennas][burst_format]
 
     path_delays_ns = [
         0,
@@ -41,6 +60,15 @@ def etu70_channel(signal, rx_antennas, burst_format, sample_rate, snr_db, dopple
 
         path_delays_samples[i] = delay_samples
 
+    n_terms = 16
+
+    alpha = np.array([
+        math.pi * m / (n_terms + 1)
+        for m in range(1, n_terms + 1)
+    ])
+
+    doppler_freqs = doppler_freq * np.cos(alpha)
+
     faded_signal = np.zeros(len(signal), dtype=complex)
 
     for path_index in range(len(path_delays_samples)):
@@ -51,11 +79,7 @@ def etu70_channel(signal, rx_antennas, burst_format, sample_rate, snr_db, dopple
 
         gain = 10 ** (gain_db / 20)
 
-        phi = random.uniform(0, 2 * math.pi)
-
-        h_real = random.gauss(0, 1)
-        h_imag = random.gauss(0, 1)
-        h = complex(h_real, h_imag) / np.sqrt(2)
+        phi = np.random.uniform(0, 2 * math.pi, n_terms)
 
         for n in range(len(signal)):
 
@@ -63,11 +87,11 @@ def etu70_channel(signal, rx_antennas, burst_format, sample_rate, snr_db, dopple
             if delayed_index >= 0:
                 t = n / sample_rate
 
-                doppler_phase = (2 * math.pi * doppler_freq * t + phi)
+                h_gmeds = (1.0 / np.sqrt(n_terms)) * np.sum(
+                    np.exp(1j * (2 * math.pi * doppler_freqs * t + phi))
+                )
 
-                h_doppler = h * cmath.exp(1j * doppler_phase)
-
-                faded_signal[n] += (gain * h_doppler * signal[delayed_index])
+                faded_signal[n] += (gain * h_gmeds * signal[delayed_index])
 
     shifted_signal = np.zeros(len(signal), dtype=complex)
 
@@ -77,8 +101,6 @@ def etu70_channel(signal, rx_antennas, burst_format, sample_rate, snr_db, dopple
 
         phase = 2 * math.pi * freq_offset * t
 
-        shifted = faded_signal[n] * cmath.exp(1j * phase)
+        shifted_signal[n] = faded_signal[n] * cmath.exp(1j * phase)
 
-        shifted_signal[n] = shifted
-
-    return awgn(shifted_signal, snr_db=snr_db)
+    return awgn(shifted_signal, snr_db)

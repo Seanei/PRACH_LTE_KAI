@@ -2,7 +2,7 @@ import random
 import numpy as np
 
 
-def awgn(signal, rx_antennas, burst_format, snr_db):
+def awgn(signal, snr_db):
 
     signal_power = np.sum(np.abs(signal) ** 2)
 
