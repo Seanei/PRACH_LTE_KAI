@@ -3,7 +3,6 @@ import cmath
 import numpy as np
 from typing import List
 
-
 __all__ = ["zadoff_chu"]
 
 
@@ -47,23 +46,24 @@ def idft(numbers: complex):
         result[n] = sum_value
     return result
 
+
 def Multi_Bef_Detect(numbers: complex, format: int = 0):
     N = len(numbers)
     result = np.zeros((N, 64), dtype=complex)
     cp_inside = np.zeros((N, 64), dtype=complex)
     # Here will be a reference signal from generate preamble block, when I will be able to use it outside of ue
-    #for i in range(64):
-        #generate preambles here
-    #here will be fft function of reference signal
-    #plug for reference signal so that none errors would occure
+    # for i in range(64):
+    # generate preambles here
+    # here will be fft function of reference signal
+    # plug for reference signal so that none errors would occure
     reference_fft = np.zeros((N, 64), dtype=complex)
     if format == 2 or format == 3:
-        n_corr = 2;
+        n_corr = 2
     else:
-        n_corr = 1;
+        n_corr = 1
     for i in range(n_corr):
         for j in range(64):
             ref_fft_column = reference_fft[:, j]
             cp_inside[:, j] += np.abs(idft(numbers * np.conj(ref_fft_column))) ** 2
-    result = cp_inside/math.sqrt(n_corr)
+    result = cp_inside / math.sqrt(n_corr)
     return result
