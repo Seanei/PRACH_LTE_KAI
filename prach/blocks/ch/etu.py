@@ -5,7 +5,7 @@ import cmath
 from .awgn import awgn
 
 
-def etu_channel(signal, sample_rate, doppler_freq, freq_offset, snr_db): 
+def etu_channel(signal, sample_rate, doppler_freq, freq_offset, snr_db):
 
     path_delays_ns = [
         0,
