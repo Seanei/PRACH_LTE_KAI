@@ -4,28 +4,8 @@ import cmath
 
 from .awgn import awgn
 
-snr_table = {
-    2: {
-        0: -8.0,
-        1: -7.8,
-        2: -10.0,
-        3: -10.1,
-        4: -0.1
-    },
 
-    4: {
-        0: -12.1,
-        1: -11.7,
-        2: -14.1,
-        3: -13.9,
-        4: -5.1
-    }
-}
-
-
-def etu_channel(signal, rx_antennas, burst_format, sample_rate, doppler_freq, freq_offset):
-
-    snr_db = snr_table[rx_antennas][burst_format]
+def etu_channel(signal, sample_rate, doppler_freq, freq_offset, snr_db): 
 
     path_delays_ns = [
         0,
