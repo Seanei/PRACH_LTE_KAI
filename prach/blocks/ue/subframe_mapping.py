@@ -93,7 +93,7 @@ class SubframeMappingBlock(Block):
         sf_n_cond = SUBFRAME_CONFIG[self.config_index][0]
 
         if sf_n_cond != 1 and self.sf_n % 2 != 0:
-            return None
+            return data
 
         start_sf = SUBFRAME_CONFIG[self.config_index][1][0]
         num_sf = NUM_SF[self.preamble_format]
