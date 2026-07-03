@@ -55,7 +55,7 @@ output_windows = result.meta.get("prach_windows")
 print("\n--- Результаты mapper-теста ---")
 if output_windows:
     extracted_sf, extracted_sequence = output_windows[0]
-    print(f"Сигнал успешно передан в субфрейме: {extracted_sf}")
+    print(f"Сигнал успешно передан в сабфрейме: {extracted_sf}")
     
     max_diff = np.max(np.abs(reference_sequence - extracted_sequence))
     print(f"Максимальное различие отсчетов: {max_diff}")
