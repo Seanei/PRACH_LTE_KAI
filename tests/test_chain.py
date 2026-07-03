@@ -2,14 +2,9 @@ from dataclasses import dataclass, field
 from typing import Dict, Any
 import numpy as np
 
-from prach.pipeline import Pipeline
+from prach.pipeline import Pipeline, CommonData
 from prach.blocks.ue.subframe_mapping import SubframeMappingBlock
 from prach.blocks.enb.subframe_demapping import SubframeDemappingBlock
-
-@dataclass(kw_only=True)
-class CommonData:
-    meta: Dict[str, Any] = field(default_factory=dict)
-
 
 cfg = {
     "config": {
@@ -31,6 +26,7 @@ cfg = {
 
 pipeline = Pipeline(cfg)
 data = CommonData()
+data.meta = {}
 
 F_S = 30_720_000
 samples_per_subframe = int(F_S * 1e-3)  # 30720 отсчетов
@@ -64,7 +60,7 @@ if output_windows:
     max_diff = np.max(np.abs(reference_sequence - extracted_sequence))
     print(f"Максимальное различие отсчетов: {max_diff}")
     
-    assert max_diff < 1e-12, "Ошибка: Извлеченный сигнал искажен!"
-    print("Ура! Сигнал на выходе демаппера абсолютно идентичен исходному сигналу на входе!")
+    assert max_diff < 1e-12, "Ошибка: Извлеченный сигнал искажен"
+    print("Сигнал на выходе демаппера идентичен исходному сигналу на входе")
 else:
-    print("Ошибка: Приемник не смог выделить временные окна для PRACH.")
+    print("Ошибка: Приемник не смог выделить временные окна")
