@@ -2,11 +2,11 @@ import numpy as np
 from typing import Optional
 from prach.pipeline import CommonData, Block, BlockRegistry
 from prach.constants import (
-    SAMPLING_FREQUENCY_HZ,
     NUM_SUBFRAMES_PER_FRAME,
     PREAMBLE_DURATION_SUBFRAMES,
     SUBFRAME_CONFIG,
 )
+
 
 @BlockRegistry.register
 class SubframeDemappingBlock(Block):
@@ -37,7 +37,7 @@ class SubframeDemappingBlock(Block):
             tail = frame_signal[:remaining_sf].flatten()
             full_window = np.concatenate([self._carry_over, tail])
 
-            clean_preamble = full_window[cp_length : cp_length + sequence_length]
+            clean_preamble = full_window[cp_length:cp_length + sequence_length]
             prach_windows.append((self._carry_over_start_sf, clean_preamble))
 
             self._carry_over = None
@@ -53,16 +53,14 @@ class SubframeDemappingBlock(Block):
 
                     if end_sf <= NUM_SUBFRAMES_PER_FRAME:
                         full_window = frame_signal[start_sf:end_sf].flatten()
-                        clean_preamble = full_window[cp_length : cp_length + sequence_length]
+                        clean_preamble = full_window[cp_length:cp_length + sequence_length]
                         prach_windows.append((start_sf, clean_preamble))
                     else:
                         partial = frame_signal[start_sf:].flatten()
                         self._carry_over = partial
                         self._carry_over_start_sf = start_sf
 
-        if not prach_windows and self._carry_over is None:
-            return None
-
         data.meta["prach_windows"] = prach_windows
         data.meta["carry_over_prach"] = self._carry_over
         return data
+    

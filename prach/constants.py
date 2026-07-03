@@ -1,9 +1,8 @@
-SAMPLING_FREQUENCY_HZ = 30_720_000  
-
-NUM_SUBFRAMES_PER_FRAME = 10  
-
+SAMPLING_FREQUENCY_HZ = 30_720_000
+NUM_SUBFRAMES_PER_FRAME = 10
 PREAMBLE_DURATION_SUBFRAMES = [1, 2, 2, 3]
-# ts 136 211 v10.0.0 — Table 5.7.1-2
+
+# TS 136 211 v10.0.0 — Table 5.7.1-2
 SUBFRAME_CONFIG = [
     [0, [1]], [0, [4]], [0, [7]], [1, [1]], [1, [4]], [1, [7]],
     [1, [1, 6]], [1, [2, 7]], [1, [3, 8]], [1, [1, 4, 7]],
