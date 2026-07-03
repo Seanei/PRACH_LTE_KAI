@@ -47,10 +47,10 @@ def idft(numbers: complex):
     return result
 
 
-def Multi_Bef_Detect(numbers: complex, format: int = 0):
-    N = len(numbers)
+def Multi_Bef_Detect(waveform: complex, format: int = 0):
+    N = len(waveform)
     result = np.zeros((N, 64), dtype=complex)
-    cp_inside = np.zeros((N, 64), dtype=complex)
+    waveform_for_check = np.zeros((N, 64), dtype=complex)
     # Here will be a reference signal from generate preamble block, when I will be able to use it outside of ue
     # for i in range(64):
     # generate preambles here
@@ -63,7 +63,7 @@ def Multi_Bef_Detect(numbers: complex, format: int = 0):
         n_corr = 1
     for i in range(n_corr):
         for j in range(64):
-            ref_fft_column = reference_fft[:, j]
-            cp_inside[:, j] += numbers * np.conj(ref_fft_column)
-    result = cp_inside / math.sqrt(n_corr)
+            ref_fft_preamble = reference_fft[:, j]
+            waveform_for_check[:, j] += waveform * np.conj(ref_fft_preamble)
+    result = waveform_for_check / math.sqrt(n_corr)
     return result
