@@ -66,7 +66,7 @@ def Multi_Bef_Detect(waveform: complex, reference: complex):
     N = len(waveform)
     result = np.zeros((N, 64), dtype=complex)
     waveform_for_check = np.zeros((N, 64), dtype=complex)
-    reference_fft_preamble = np.zeros((N, 64), dtype=complex)
+    ref_fft_preamble = np.zeros((N, 64), dtype=complex)
     for j in range(64):
         ref_fft_preamble = reference[:, j]
         waveform_for_check[:, j] += waveform * np.conj(ref_fft_preamble)
