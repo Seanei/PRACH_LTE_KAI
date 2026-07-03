@@ -1,7 +1,9 @@
 import numpy as np
 from prach.pipeline import Pipeline, CommonData
-from prach.blocks.ue.subframe_mapping import SubframeMappingBlock 
+from prach.blocks.ue.subframe_mapping import SubframeMappingBlock
 from prach.blocks.enb.subframe_demapping import SubframeDemappingBlock
+
+print(f"Загрузка блоков: {SubframeMappingBlock.__name__}, {SubframeDemappingBlock.__name__}")
 
 cfg = {
     "config": {
@@ -44,7 +46,7 @@ data.meta["sf_n"] = 0
 data.meta["config_index"] = 0
 data.meta["preamble_format"] = 0
 
-print("Запуск пайплайна ")
+print("Запуск пайплайна Передатчик -> Приемник")
 result = pipeline.run(data)
 
 output_windows = result.meta.get("prach_windows")
@@ -57,4 +59,4 @@ if output_windows:
     assert max_diff < 1e-12, "Ошибка: Извлеченный сигнал искажен"
     print("Сигнал на выходе демаппера абсолютно идентичен исходному сигналу на входе")
 else:
-    print("Ошибка: Приемник не смог выделить временные окна")
+    print("Ошибка: Приемник не смог выделить временные окна для PRACH")
