@@ -2,10 +2,13 @@ import numpy as np
 from typing import Optional
 from prach.pipeline import CommonData, Block, BlockRegistry
 from prach.constants import (
+    SAMPLING_FREQUENCY_HZ,
     NUM_SUBFRAMES_PER_FRAME,
     PREAMBLE_DURATION_SUBFRAMES,
     SUBFRAME_CONFIG,
 )
+
+F_S = SAMPLING_FREQUENCY_HZ
 
 
 @BlockRegistry.register
