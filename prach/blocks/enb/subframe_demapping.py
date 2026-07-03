@@ -66,4 +66,3 @@ class SubframeDemappingBlock(Block):
         data.meta["prach_windows"] = prach_windows
         data.meta["carry_over_prach"] = self._carry_over
         return data
-    
