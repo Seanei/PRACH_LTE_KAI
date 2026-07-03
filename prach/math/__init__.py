@@ -60,3 +60,15 @@ def idft(numbers: complex):
         sum_value /= N
         result[n] = sum_value
     return result
+
+
+def Multi_Bef_Detect(waveform: complex, reference: complex):
+    N = len(waveform)
+    result = np.zeros((N, 64), dtype=complex)
+    waveform_for_check = np.zeros((N, 64), dtype=complex)
+    reference_fft = np.zeros((N, 64), dtype=complex)
+    for j in range(64):
+        ref_fft_preamble = reference[:, j]
+        waveform_for_check[:, j] += waveform * np.conj(ref_fft_preamble)
+    result = waveform_for_check
+    return result
