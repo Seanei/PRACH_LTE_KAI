@@ -47,7 +47,6 @@ data.meta["sf_n"] = 0
 data.meta["config_index"] = 0
 data.meta["preamble_format"] = 0
 
-print("Запуск сквозного пайплайна Передатчик -> Приемник...")
 result = pipeline.run(data)
 
 output_windows = result.meta.get("prach_windows")
