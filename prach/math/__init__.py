@@ -64,6 +64,6 @@ def Multi_Bef_Detect(numbers: complex, format: int = 0):
     for i in range(n_corr):
         for j in range(64):
             ref_fft_column = reference_fft[:, j]
-            cp_inside[:, j] += np.abs(idft(numbers * np.conj(ref_fft_column))) ** 2
+            cp_inside[:, j] += numbers * np.conj(ref_fft_column)
     result = cp_inside / math.sqrt(n_corr)
     return result
