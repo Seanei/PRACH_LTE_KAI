@@ -49,7 +49,7 @@ def dft(x):
     return X
 
 
-def idft(numbers: complex):
+def idft(numbers):
     N = len(numbers)
     result = np.zeros(N, dtype=complex)
     for n in range(N):
@@ -62,13 +62,14 @@ def idft(numbers: complex):
     return result
 
 
-def Multi_Bef_Detect(waveform: complex, reference: complex):
-    N = len(waveform)
-    result = np.zeros((N, 64), dtype=complex)
-    waveform_for_check = np.zeros((N, 64), dtype=complex)
-    ref_fft_preamble = np.zeros((N, 64), dtype=complex)
-    for j in range(64):
-        ref_fft_preamble = reference[:, j]
-        waveform_for_check[:, j] += waveform * np.conj(ref_fft_preamble)
-    result = waveform_for_check
-    return result
+def multi_bef_detect(waveform: np.ndarray,
+                     reference: np.ndarray) -> np.ndarray:
+    waveform = np.asarray(waveform, dtype=complex)
+    reference = np.asarray(reference, dtype=complex)
+
+    if waveform.shape != reference.shape:
+        raise ValueError(
+            "waveform and reference must have the same shape"
+        )
+
+    return waveform * np.conj(reference)
