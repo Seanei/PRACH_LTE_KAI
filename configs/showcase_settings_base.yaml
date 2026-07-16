@@ -1,9 +1,12 @@
-config:
-  BlockTest:
-    field1: hello
-    mode: fast
-  TestBlock:
-    field1: world
-chain:
-  - BlockTest
-  - TestBlock
+root_sequence_index: 0
+preamble_format: 0
+preamble_index: 0
+zero_correlation_config: 0
+high_speed_flag: 0
+n_ul_rb: 100
+phi: 7
+n_ra_prb_offset: 0
+delta_f_ra: 1250
+delta_f: 15000
+sf_n: 0
+config_index: 3

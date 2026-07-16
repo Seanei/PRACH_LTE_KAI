@@ -2,17 +2,9 @@ import unittest
 
 import numpy as np
 
-from dataclasses import dataclass, field
-from typing import Dict, Any
-
-from prach.pipeline import CommonData
+from prach.pipeline import PRACHConfiguration
 from prach.blocks.ue import SubcarrierMappingBlock
 from prach.blocks.enb import SubcarrierDemappingBlock
-
-
-@dataclass(kw_only=True)
-class CommonDataEx(CommonData):
-    meta: Dict[str, Any] = field(default_factory=dict)
 
 
 class TestMappingDemapping(unittest.TestCase):
@@ -864,50 +856,20 @@ class TestMappingDemapping(unittest.TestCase):
 
     def perform_test(self):
 
-        config = {
+        config = PRACHConfiguration.from_dict({
             "n_ul_rb": 100,
             "n_ra_prb_offset": 0,
             "phi": 7,
             "delta_f_ra": 1250,
             "delta_f": 15000
-        }
+        })
 
         mapping = SubcarrierMappingBlock(config)
         demapping = SubcarrierDemappingBlock(config)
 
-        # Mapping
+        mapped_spectrum = mapping.map(self.input_data)
 
-        mapping_data = CommonDataEx()
-
-        mapping_data.meta = {
-            "dft": self.input_data,
-            "n_ul_rb": config["n_ul_rb"],
-            "n_ra_prb_offset": config["n_ra_prb_offset"]
-        }
-
-        mapping.process(mapping_data)
-
-        mapped_spectrum = np.array(
-            mapping_data.meta.get("Subcarrier_Mapping", []),
-            dtype=complex
-        )
-
-        # Demapping
-
-        demapping_data = CommonDataEx()
-
-        demapping_data.meta = {
-            "fft": mapped_spectrum,
-            "n_ul_rb": config["n_ul_rb"],
-            "n_ra_prb_offset": config["n_ra_prb_offset"]
-        }
-
-        demapping.process(demapping_data)
-
-        output_data = np.array(
-            demapping_data.meta.get("Subcarrier_Demapping", []),
-            dtype=complex
-        )
+        output_data = np.array(demapping.demap(mapped_spectrum), dtype=complex)
 
         tolerance = 1e-7
 

@@ -5,13 +5,11 @@
 import argparse
 import pathlib
 import pprint
-from enum import Enum
-from dataclasses import dataclass, field
 from copy import deepcopy
 from typing import Any, Dict, Optional
 
 import yaml
-from prach.pipeline import CommonData, Block, BlockRegistry, Pipeline
+from prach.pipeline import PRACHConfiguration, Transmitter, Receiver
 
 
 def load_yaml(path: pathlib.Path) -> Dict[str, Any]:
@@ -47,46 +45,6 @@ def build_config_from_files(
     return deep_merge(base, over)
 
 
-@dataclass(kw_only=True)
-class CommonDataEx(CommonData):
-    meta: Dict[str, Any] = field(default_factory=dict)
-
-
-class Mode(Enum):
-    FAST = "fast"
-    ACCURATE = "accurate"
-
-
-@BlockRegistry.register
-class BlockTest(Block):
-    field1: str
-    mode: Mode
-    _field2: Optional[str] = None
-
-    def process(self, data: CommonData) -> CommonData:
-        data.meta["BlockTest.field1"] = self.field1
-        data.meta["BlockTest.mode"] = self.mode.value
-
-        prev = data.meta.get("combined", [])
-        prev.append(self.field1)
-        data.meta["combined"] = prev
-
-        self._field2 = f"computed-{self.field1}"
-        data.meta["_field2"] = self._field2
-        return data
-
-
-@BlockRegistry.register
-class TestBlock(Block):
-    field1: str
-
-    def process(self, data: CommonData) -> CommonData:
-        prev = data.meta.get("combined", [])
-        prev.append(self.field1)
-        data.meta["combined"] = prev
-        return data
-
-
 def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -107,18 +65,28 @@ def main(argv=None):
     base_config_path = pathlib.Path(args.base_config)
     override_config_path = pathlib.Path(args.override) if args.override else None
 
-    config = build_config_from_files(base_config_path, override_config_path)
+    merged = build_config_from_files(base_config_path, override_config_path)
+
+    config = PRACHConfiguration.from_dict(merged)
 
     print()
-    print("Merged config:")
-    pprint.pprint(config)
+    print("PRACH configuration:")
+    pprint.pprint(vars(config))
 
-    pipeline = Pipeline(config)
-    result = pipeline.run(CommonDataEx())
+    transmitter = Transmitter(config)
+    receiver = Receiver(config)
 
     print()
-    print("Pipeline result meta:")
-    pprint.pprint(result.meta)
+    print(
+        f"Transmitter blocks: {[type(b).__name__ for b in (
+        transmitter.preamble_generator, transmitter.dft,
+        transmitter.subcarrier_mapping, transmitter.idft,
+        transmitter.subframe_mapping)]}"
+    )
+    print(
+        f"Receiver blocks: {[type(b).__name__ for b in (
+        receiver.dft, receiver.subcarrier_demapping)]}"
+    )
 
 
 if __name__ == "__main__":

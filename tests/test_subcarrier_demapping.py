@@ -2,16 +2,8 @@ import unittest
 
 import numpy as np
 
-from dataclasses import dataclass, field
-from typing import Dict, Any
-
-from prach.pipeline import CommonData
+from prach.pipeline import PRACHConfiguration
 from prach.blocks.enb import SubcarrierDemappingBlock
-
-
-@dataclass(kw_only=True)
-class CommonDataEx(CommonData):
-    meta: Dict[str, Any] = field(default_factory=dict)
 
 
 class TestSubcarrierDemapping(unittest.TestCase):
@@ -25442,30 +25434,17 @@ class TestSubcarrierDemapping(unittest.TestCase):
 
     def perform_test(self):
 
-        config = {
+        config = PRACHConfiguration.from_dict({
             "n_ul_rb": 100,
             "n_ra_prb_offset": 0,
             "phi": 7,
             "delta_f_ra": 1250,
             "delta_f": 15000
-        }
+        })
 
         block = SubcarrierDemappingBlock(config)
 
-        data = CommonDataEx()
-
-        data.meta = {
-            "fft": self.input_data,
-            "n_ul_rb": config["n_ul_rb"],
-            "n_ra_prb_offset": config["n_ra_prb_offset"]
-        }
-
-        block.process(data)
-
-        python_output = np.array(
-            data.meta.get("Subcarrier_Demapping", []),
-            dtype=complex
-        )
+        python_output = np.array(block.demap(self.input_data), dtype=complex)
         print("PYTHON:")
         print(python_output[:10])
 
