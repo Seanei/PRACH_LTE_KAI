@@ -1,12 +1,9 @@
-from prach.pipeline import CommonData, Block, BlockRegistry
+import numpy as np
+
+from prach.pipeline.block import Block
 from prach.math import dft
 
 
-@BlockRegistry.register
 class DFTBlock(Block):
-    def process(self, data: CommonData) -> CommonData:
-        preamble = data.meta.get("generated_preamble", [])
-
-        data.meta["after_dft"] = dft(preamble)
-
-        return data
+    def transform(self, signal: np.ndarray) -> np.ndarray:
+        return dft(np.asarray(signal, dtype=complex))
