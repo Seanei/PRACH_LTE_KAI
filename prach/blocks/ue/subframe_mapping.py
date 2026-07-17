@@ -93,24 +93,30 @@ class SubframeMappingBlock(Block):
         sf_n_cond = SUBFRAME_CONFIG[self.config_index][0]
 
         if sf_n_cond != 1 and self.sf_n % 2 != 0:
-            return None
+            return data
 
         start_sf = SUBFRAME_CONFIG[self.config_index][1][0]
         num_sf = NUM_SF[self.preamble_format]
-        frame_signal = np.zeros((NUM_SUBFRAMES, samples_per_subframe), dtype=np.complex128)
+        frame_signal = np.zeros(
+            (NUM_SUBFRAMES, samples_per_subframe), dtype=np.complex128
+        )
 
         if start_sf + num_sf > NUM_SUBFRAMES:
             fit_in_current = NUM_SUBFRAMES - start_sf
             for i in range(fit_in_current):
-                frame_signal[start_sf + i] = preamble[i * samples_per_subframe:(i + 1) * samples_per_subframe]
-            data.meta["carry_over_preamble"] = preamble[fit_in_current * samples_per_subframe:]
+                frame_signal[start_sf + i] = preamble[
+                    i * samples_per_subframe:(i + 1) * samples_per_subframe
+                ]
+            data.meta["carry_over_preamble"] = preamble[
+                fit_in_current * samples_per_subframe:
+            ]
             num_sf = fit_in_current
 
         for i in range(num_sf):
             start_idx = i * samples_per_subframe
             end_idx = start_idx + samples_per_subframe
             chunk = preamble[start_idx:end_idx]
-            frame_signal[start_sf + i, :len(chunk)] = chunk
+            frame_signal[start_sf + i, : len(chunk)] = chunk
 
         data.meta["frame_signal"] = frame_signal
         return data

@@ -7,6 +7,18 @@
 
 # Python cache files
 **/__pycache__
+.venv/ 
+
+# IDE project files
+.idea
+.project
+.settings
+.vs
+.vscode
+
+# Python cache files
+**/__pycache__
 
 # Temporary verification files
 prach/blocks/ue/*.txt
+main
