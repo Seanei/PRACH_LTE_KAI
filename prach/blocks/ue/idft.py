@@ -1,11 +1,9 @@
-from prach.pipeline import CommonData, Block, BlockRegistry
+import numpy as np
+
+from prach.pipeline.block import Block
 from prach.math import idft
 
 
-@BlockRegistry.register
 class IDFTBlock(Block):
-    def process(self, data: CommonData) -> CommonData:
-        After_submap = data.meta.get("Before_IDFT")
-        result = idft(After_submap)
-        data.meta["After_IDFT"] = result
-        return data
+    def transform(self, spectrum: np.ndarray) -> np.ndarray:
+        return idft(np.asarray(spectrum, dtype=complex))

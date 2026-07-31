@@ -1,5 +1,2 @@
-config:
-  BlockTest:
-    field1: hi
-  TestBlock:
-    field1: ivan
+preamble_index: 5
+n_ra_prb_offset: 2
