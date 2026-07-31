@@ -25,9 +25,11 @@ SAMPLES_PER_SF = int(F_S * 1e-3)
         (31, 1, 0, 9, 2),  # случай с переносом в следующий фрейм для формата 1
         (42, 2, 0, 5, 2),  # формат 2
         # (57, 3, 1, 8, 3),  # случай с переполнением для формата 3
-    ]
+    ],
 )
-def test_subframe_mapping_valid_configs(config_index, preamble_format, sf_n, start_sf, num_sf):
+def test_subframe_mapping_valid_configs(
+    config_index, preamble_format, sf_n, start_sf, num_sf
+):
     block = SubframeMappingBlock()
     data = MockCommonData()
 
