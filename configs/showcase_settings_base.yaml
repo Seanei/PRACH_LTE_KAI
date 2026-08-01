@@ -1,9 +1,10 @@
-config:
-  BlockTest:
-    field1: hello
-    mode: fast
-  TestBlock:
-    field1: world
-chain:
-  - BlockTest
-  - TestBlock
+# Only what a cell signals. Preamble format, cyclic prefix and sequence
+# lengths, subcarrier spacing and frequency offset follow from config_index
+# and live in prach/pipeline/spec.py.
+config_index: 3
+root_sequence_index: 0
+zero_correlation_config: 0
+high_speed_flag: 0
+n_ra_prb_offset: 0
+n_ul_rb: 100
+preamble_index: 0

@@ -3,15 +3,8 @@ import pathlib
 import struct
 import mmap
 
-from dataclasses import dataclass, field
-from typing import Dict, Any
-from prach.pipeline import CommonData
+from prach.pipeline import PRACHConfiguration
 from prach.blocks.ue import PreambleGeneratorBlock
-
-
-@dataclass(kw_only=True)
-class CommonDataEx(CommonData):
-    meta: Dict[str, Any] = field(default_factory=dict)
 
 
 class TestPreambleGenerator(unittest.TestCase):
@@ -23,8 +16,10 @@ class TestPreambleGenerator(unittest.TestCase):
         for file in pathlib.Path("tests/preambles").glob("*.bin"):
             params = list(map(int, file.name.split("_")[:5]))
 
+            # the fixture names carry the preamble format, which is no longer
+            # settable; the first configuration index of the format selects it
             config = {
-                "preamble_format": params[0],
+                "config_index": 16 * params[0],
                 "root_sequence_index": params[1],
                 "preamble_index": params[2],
                 "high_speed_flag": params[3],
@@ -50,10 +45,8 @@ class TestPreambleGenerator(unittest.TestCase):
         cls.amount = len(cls.test_preambles)
 
     def perform_test(self, config, test_preamble):
-        block = PreambleGeneratorBlock(config)
-        data = CommonDataEx()
-        block.process(data)
-        preamble = data.meta.get("generated_preamble", [])
+        block = PreambleGeneratorBlock(PRACHConfiguration.from_dict(config))
+        preamble = block.generate()
 
         tolerance = 1e-7
 

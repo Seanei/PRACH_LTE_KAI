@@ -1,123 +1,94 @@
 import unittest
+
 import numpy as np
-from prach.pipeline import CommonData
-from prach.blocks.enb.subframe_demapping import (
-    SubframeDemappingBlock,
-    F_S,
+
+from prach.blocks.enb import SubframeDemappingBlock
+from prach.pipeline import PRACHConfiguration
+from prach.pipeline.spec import (
+    CP_LENGTH,
     NUM_SUBFRAMES,
+    SAMPLES_PER_SUBFRAME,
+    SEQUENCE_LENGTH,
 )
+
+
+def make_config(config_index):
+    config = PRACHConfiguration()
+    config.config_index = config_index
+    return config
+
+
+def noise_frame(rng):
+    return rng.standard_normal(
+        (NUM_SUBFRAMES, SAMPLES_PER_SUBFRAME)
+    ) + 1j * rng.standard_normal((NUM_SUBFRAMES, SAMPLES_PER_SUBFRAME))
 
 
 class TestSubframeDemapping(unittest.TestCase):
 
-    def test_simple_subframe_demapping_without_carry_over(self):
-        """Тест 1: Извлечение преамбулы без переноса (формат 0, конфигурация 0)"""
-        cp_len = 3168
-        seq_len = 24576
-        samples_per_subframe = int(F_S * 1e-3)
+    def test_preamble_inside_one_frame(self):
+        """Формат 0, конфигурация 0: преамбула целиком в одном субкадре"""
+        block = SubframeDemappingBlock(make_config(0))
+        preamble_format = block.config.preamble_format
+        cp_length = CP_LENGTH[preamble_format]
+        sequence_length = SEQUENCE_LENGTH[preamble_format]
 
-        config = {
-            "sf_n": 0,
-            "config_index": 0,
-            "preamble_format": 0,
-            "cp_length": cp_len,
-            "sequence_length": seq_len,
-        }
-        block = SubframeDemappingBlock(config=config)
+        rng = np.random.default_rng(0)
+        frame = noise_frame(rng)
+        expected = np.ones(sequence_length, dtype=np.complex128) * (5 + 5j)
+        frame[1, cp_length: cp_length + sequence_length] = expected
 
-        data = CommonData()
-        data.meta = {}  # <--- ВОТ НАШЕ СПАСЕНИЕ! Создаем пустой словарь
-        data.meta["sf_n"] = 0
-        data.meta["config_index"] = 0
-        data.meta["preamble_format"] = 0
-        data.meta["cp_length"] = cp_len
-        data.meta["sequence_length"] = seq_len
+        windows = block.demap(frame)
 
-        frame_signal = np.random.randn(
-            NUM_SUBFRAMES, samples_per_subframe
-        ) + 1j * np.random.randn(NUM_SUBFRAMES, samples_per_subframe)
-        expected_preamble = np.ones(seq_len, dtype=np.complex128) * (5 + 5j)
-        frame_signal[1, cp_len:cp_len + seq_len] = expected_preamble
-        data.meta["frame_signal"] = frame_signal
+        self.assertEqual(len(windows), 1)
+        start_sf, extracted = windows[0]
+        self.assertEqual(start_sf, 1)
+        np.testing.assert_array_equal(extracted, expected)
+        self.assertIsNone(block.carry_over)
 
-        output_data = block.process(data)
+    def test_preamble_across_a_frame_boundary(self):
+        """Формат 1, конфигурация 31: преамбула переносится в следующий фрейм"""
+        config = make_config(31)
+        block = SubframeDemappingBlock(config)
+        preamble_format = config.preamble_format
+        cp_length = CP_LENGTH[preamble_format]
+        sequence_length = SEQUENCE_LENGTH[preamble_format]
 
-        self.assertIsNotNone(output_data)
-        prach_windows = output_data.meta.get("prach_windows", [])
-        self.assertEqual(len(prach_windows), 1, "Должно быть найдено ровно 1 окно")
+        rng = np.random.default_rng(1)
+        first, second = noise_frame(rng), noise_frame(rng)
 
-        start_sf, extracted_preamble = prach_windows[0]
-        self.assertEqual(start_sf, 1, "Преамбула должна начинаться в 1-м субкадре")
+        expected = np.ones(sequence_length, dtype=np.complex128) * (7 + 7j)
+        window = np.concatenate([first[9], second[0]])
+        window[cp_length: cp_length + sequence_length] = expected
+        first[9] = window[:SAMPLES_PER_SUBFRAME]
+        second[0] = window[SAMPLES_PER_SUBFRAME:]
 
-        np.testing.assert_array_equal(extracted_preamble, expected_preamble)
-        self.assertIsNone(output_data.meta.get("carry_over_prach"))
+        self.assertEqual(block.demap(first, sf_n=0), [])
+        self.assertIsNotNone(block.carry_over)
 
-    def test_subframe_demapping_with_carry_over(self):
-        """Тест 2: Преамбула на границе фреймов (формат 1, конфигурация 15)"""
-        cp_len = 3168
-        seq_len = 24576
-        samples_per_subframe = int(F_S * 1e-3)
+        windows = block.demap(second, sf_n=1)
 
-        config = {
-            "sf_n": 0,
-            "config_index": 15,
-            "preamble_format": 1,
-            "cp_length": cp_len,
-            "sequence_length": seq_len,
-        }
-        block = SubframeDemappingBlock(config=config)
-
-        expected_preamble = np.ones(seq_len, dtype=np.complex128) * (7 + 7j)
-
-        frame_1 = np.random.randn(
-            NUM_SUBFRAMES, samples_per_subframe
-        ) + 1j * np.random.randn(NUM_SUBFRAMES, samples_per_subframe)
-        frame_2 = np.random.randn(
-            NUM_SUBFRAMES, samples_per_subframe
-        ) + 1j * np.random.randn(NUM_SUBFRAMES, samples_per_subframe)
-
-        combined_window = np.concatenate([frame_1[9], frame_2[0]])
-        combined_window[cp_len:cp_len + seq_len] = expected_preamble
-
-        frame_1[9] = combined_window[:samples_per_subframe]
-        frame_2[0] = combined_window[samples_per_subframe:]
-
-        data1 = CommonData()
-        data1.meta = {}
-        data1.meta["sf_n"] = 0
-        data1.meta["config_index"] = 15
-        data1.meta["preamble_format"] = 1
-        data1.meta["cp_length"] = cp_len
-        data1.meta["sequence_length"] = seq_len
-        data1.meta["frame_signal"] = frame_1
-
-        block.process(data1)
-        self.assertIsNotNone(
-            block._carry_over, "Хвост сигнала должен сохраниться в carry_over"
-        )
-
-        data2 = CommonData()
-        data2.meta = {}
-        data2.meta["sf_n"] = 1
-        data2.meta["config_index"] = 15
-        data2.meta["preamble_format"] = 1
-        data2.meta["cp_length"] = cp_len
-        data2.meta["sequence_length"] = seq_len
-        data2.meta["frame_signal"] = frame_2
-
-        output_data2 = block.process(data2)
-
-        self.assertIsNotNone(output_data2)
-        prach_windows = output_data2.meta.get("prach_windows", [])
-        self.assertEqual(len(prach_windows), 1, "1 интервал")
-
-        start_sf, extracted_preamble = prach_windows[0]
+        self.assertEqual(len(windows), 1)
+        start_sf, extracted = windows[0]
         self.assertEqual(start_sf, 9)
+        np.testing.assert_array_equal(extracted, expected)
+        self.assertIsNone(block.carry_over)
 
-        np.testing.assert_array_equal(extracted_preamble, expected_preamble)
-        self.assertIsNone(
-            block._carry_over, "После склейки carry_over должен очиститься"
-        )
+    def test_frame_without_an_opportunity(self):
+        """Конфигурация 0 требует чётный фрейм, нечётный не даёт окон"""
+        block = SubframeDemappingBlock(make_config(0))
+
+        rng = np.random.default_rng(2)
+        self.assertEqual(block.demap(noise_frame(rng), sf_n=1), [])
+        self.assertIsNone(block.carry_over)
+
+    def test_configuration_without_prach_rejected(self):
+        # index 30 holds no PRACH opportunity at all
+        block = SubframeDemappingBlock(make_config(30))
+
+        rng = np.random.default_rng(3)
+        with self.assertRaises(ValueError):
+            block.demap(noise_frame(rng))
 
 
 if __name__ == "__main__":

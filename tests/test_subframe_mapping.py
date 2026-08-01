@@ -1,78 +1,65 @@
 import numpy as np
 import pytest
 
-from prach.blocks.ue.subframe_mapping import SubframeMappingBlock
+from prach.blocks.ue import SubframeMappingBlock
+from prach.pipeline import PRACHConfiguration
+from prach.pipeline.spec import NUM_SUBFRAMES, SAMPLES_PER_SUBFRAME
 
 
-class MockCommonData:
-    def __init__(self):
-        self.meta = {}
-
-
-F_S = 30.72e6
-NUM_SUBFRAMES = 10
-SAMPLES_PER_SF = int(F_S * 1e-3)
+def make_config(config_index):
+    config = PRACHConfiguration()
+    config.config_index = config_index
+    return config
 
 
 @pytest.mark.parametrize(
     "config_index, preamble_format, sf_n, start_sf, num_sf",
     [
-        # (config_index, preamble_format, номер фрейма, с какого сабфрейма начинается, длина)
+        # (config_index, ожидаемый формат, номер фрейма, стартовый сабфрейм, длина)
         (3, 0, 0, 1, 1),  # формат 0
         (19, 1, 1, 1, 2),  # формат 1
-        (35, 2, 0, 2, 2),  # формат 2
-        (48, 3, 1, 1, 3),  # формат 3
+        (35, 2, 0, 1, 2),  # формат 2
+        (48, 3, 0, 1, 3),  # формат 3
         (31, 1, 0, 9, 2),  # случай с переносом в следующий фрейм для формата 1
-        (42, 2, 0, 5, 2),  # формат 2
+        (42, 2, 0, 2, 2),  # формат 2
         # (57, 3, 1, 8, 3),  # случай с переполнением для формата 3
-    ],
+    ]
 )
-def test_subframe_mapping_valid_configs(
-    config_index, preamble_format, sf_n, start_sf, num_sf
-):
-    block = SubframeMappingBlock()
-    data = MockCommonData()
+def test_subframe_mapping_valid_configs(config_index, preamble_format, sf_n, start_sf, num_sf):
+    config = make_config(config_index)
 
-    expected_len = num_sf * SAMPLES_PER_SF
-    test_preamble = np.ones(expected_len, dtype=np.complex128)
+    # формат задаётся индексом конфигурации, а не отдельно
+    assert config.preamble_format == preamble_format
 
-    data.meta["sf_n"] = sf_n
-    data.meta["config_index"] = config_index
-    data.meta["preamble_format"] = preamble_format
-    data.meta["ready_preamble"] = test_preamble
+    preamble = np.ones(num_sf * SAMPLES_PER_SUBFRAME, dtype=np.complex128)
+    frame_signal, carry_over = SubframeMappingBlock(config).map(preamble, sf_n)
 
-    result_data = block.process(data)
-    assert result_data is not None, "Блок вернул None для валидной конфигурации"
-
-    frame_signal = result_data.meta["frame_signal"]
     fit_in_current = num_sf
-
     if start_sf + num_sf > NUM_SUBFRAMES:
         fit_in_current = NUM_SUBFRAMES - start_sf
-        assert "carry_over_preamble" in result_data.meta, "не сработал перенос"
+        assert carry_over is not None, "не сработал перенос"
+    else:
+        assert carry_over is None
 
-    for i in range(fit_in_current):
-        sf_idx = start_sf + i
-        chunk = frame_signal[sf_idx]
-        assert np.all(chunk == 1.0 + 0j), f"Сабфрейм {sf_idx} должен быть заполнен"
-
+    filled = range(start_sf, start_sf + fit_in_current)
     for sf_idx in range(NUM_SUBFRAMES):
-        if not (start_sf <= sf_idx < start_sf + fit_in_current):
-            chunk = frame_signal[sf_idx]
+        chunk = frame_signal[sf_idx]
+        if sf_idx in filled:
+            assert np.all(chunk == 1.0 + 0j), f"Сабфрейм {sf_idx} должен быть заполнен"
+        else:
             assert np.all(chunk == 0j), f"Сабфрейм {sf_idx} должен быть пустым"
 
 
 def test_subframe_mapping_invalid_sfn():
-    block = SubframeMappingBlock()
-    data = MockCommonData()
+    # config_index 0 requires an even system frame
+    block = SubframeMappingBlock(make_config(0))
 
-    # check odd frame
-    data.meta["sf_n"] = 1
-    data.meta["config_index"] = 0
-    data.meta["preamble_format"] = 0
-    data.meta["ready_preamble"] = np.ones(SAMPLES_PER_SF, dtype=np.complex128)
+    with pytest.raises(ValueError):
+        block.map(np.ones(SAMPLES_PER_SUBFRAME, dtype=np.complex128), sf_n=1)
 
-    result = block.process(data)
 
-    if result is None:
-        assert result is None
+# TS 36.211 Table 5.7.1-2 помечает эти индексы как N/A
+@pytest.mark.parametrize("config_index", [30, 46, 60, 61, 62])
+def test_configuration_without_prach_rejected(config_index):
+    with pytest.raises(ValueError):
+        make_config(config_index).preamble_format
