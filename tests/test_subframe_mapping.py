@@ -7,9 +7,7 @@ from prach.pipeline.spec import NUM_SUBFRAMES, SAMPLES_PER_SUBFRAME
 
 
 def make_config(config_index):
-    config = PRACHConfiguration()
-    config.config_index = config_index
-    return config
+    return PRACHConfiguration(config_index=config_index)
 
 
 @pytest.mark.parametrize(
