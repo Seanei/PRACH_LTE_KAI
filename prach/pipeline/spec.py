@@ -1,6 +1,13 @@
+import math
+from dataclasses import dataclass
+from typing import List, Sequence
+
 # 3GPP TS 136.211: Table 5.7.2-1
 N_ZC_FDD = 839  # PRACH Zadoff-Chu sequence length for formats 0-3
 N_ZC_TDD = 139  # format 4
+
+# Preambles a cell offers
+TOTAL_PREAMBLES = 64
 
 # 3GPP TS 136.211: Table 5.7.2-2
 N_CS_FDD = [
@@ -243,3 +250,146 @@ def prach_subcarrier_start(n_ul_rb: int, n_ra_prb_offset: int) -> int:
     k0 = n_ra_prb_offset * N_RB_SC - (n_ul_rb * N_RB_SC) / 2
 
     return int(N_FFT // 2 + PHI + K * (k0 + 0.5))
+
+
+def n_cs_from_config(
+    zero_correlation_config: int,
+    high_speed_flag: int,
+    n_cs_table: Sequence[Sequence[int]] = N_CS_FDD,
+) -> int:
+    """N_cs from zeroCorrelationZoneConfig and highSpeedFlag (Table 5.7.2-2)."""
+    if not 0 <= zero_correlation_config < len(n_cs_table):
+        raise ValueError(
+            f"zero_correlation_config must be in 0..{len(n_cs_table) - 1}, "
+            f"got {zero_correlation_config}"
+        )
+    if high_speed_flag not in (0, 1):
+        raise ValueError(f"high_speed_flag must be 0 or 1, got {high_speed_flag}")
+
+    n_cs = n_cs_table[zero_correlation_config][high_speed_flag]
+    if n_cs is None:
+        raise ValueError(
+            f"zero_correlation_config={zero_correlation_config} is not defined "
+            f"for high_speed_flag={high_speed_flag}"
+        )
+    return int(n_cs)
+
+
+def root_distance(u_zc: int, n_zc: int = N_ZC_FDD) -> int:
+    """d_u, the shift a one subcarrier frequency offset causes (TS 36.211 5.7.2).
+    """
+    p = pow(u_zc, -1, n_zc)
+    return p if p < n_zc / 2 else n_zc - p
+
+
+def get_shifts(n_zc: int, n_cs: int, u_zc: int = 0) -> List[int]:
+    """Cyclic shifts C_v of one root (TS 36.211 5.7.2).
+
+    u_zc = 0 selects the unrestricted set, the actual root value selects
+    the restricted set
+    """
+    return (
+        _get_shifts_unrestricted(n_zc, n_cs)
+        if u_zc == 0
+        else _get_shifts_restricted(n_zc, n_cs, u_zc)
+    )
+
+
+# TODO: cache it?
+def _get_shifts_unrestricted(n_zc: int, n_cs: int) -> List[int]:
+    if n_cs == 0:
+        return [0]
+
+    num_shifts = math.floor(n_zc / n_cs)
+    return [v * n_cs for v in range(num_shifts)]
+
+
+# TODO: cache it?
+def _get_shifts_restricted(n_zc: int, n_cs: int, u_zc: int) -> List[int]:
+    if n_cs == 0:
+        return [0]
+
+    d_u = root_distance(u_zc, n_zc)
+
+    if d_u >= n_zc / 3:
+        if d_u > (n_zc - n_cs) / 2:
+            return []
+
+        n_shift = math.floor((n_zc - 2 * d_u) / n_cs)
+        d_start = n_zc - 2 * d_u + n_shift * n_cs
+        n_group = math.floor(d_u / d_start)
+        n_shift_avg = min(
+            max(math.floor((d_u - n_group * d_start) / n_cs), 0),
+            n_shift,
+        )
+    elif n_cs <= d_u:
+        n_shift = math.floor(d_u / n_cs)
+        d_start = 2 * d_u + n_shift * n_cs
+        n_group = math.floor(n_zc / d_start)
+        n_shift_avg = max(math.floor((n_zc - 2 * d_u - n_group * d_start) / n_cs), 0)
+    else:
+        # no preamble from this root in restricted mode
+        return []
+
+    total_shifts = n_shift * n_group + n_shift_avg
+    return [
+        d_start * math.floor(v / n_shift) + (v % n_shift) * n_cs
+        for v in range(total_shifts)
+    ]
+
+
+@dataclass(frozen=True)
+class PreambleSlot:
+    """One (root, cyclic shift) pair and the preamble index it carries"""
+
+    preamble_index: int
+    root_offset: int  # offset from root_sequence_index, not an absolute root
+    u_zc: int
+    c_v: int
+    d_u: int
+
+
+def build_preamble_map(
+    root_sequence_index: int,
+    n_cs: int,
+    high_speed_flag: int,
+    n_zc: int = N_ZC_FDD,
+    u_zc_table: Sequence[int] = U_ZC_FDD,
+    total_preambles: int = TOTAL_PREAMBLES,
+) -> List[PreambleSlot]:
+    if total_preambles <= 0:
+        raise ValueError(f"total_preambles must be positive, got {total_preambles}")
+    if not 0 <= root_sequence_index < len(u_zc_table):
+        raise ValueError(
+            f"root_sequence_index must be in 0..{len(u_zc_table) - 1}, "
+            f"got {root_sequence_index}"
+        )
+
+    slots: List[PreambleSlot] = []
+    for root_offset in range(len(u_zc_table)):
+        if len(slots) >= total_preambles:
+            break
+
+        u_zc = u_zc_table[(root_sequence_index + root_offset) % len(u_zc_table)]
+
+        for c_v in get_shifts(n_zc, n_cs, u_zc * high_speed_flag):
+            if len(slots) >= total_preambles:
+                break
+            slots.append(
+                PreambleSlot(
+                    preamble_index=len(slots),
+                    root_offset=root_offset,
+                    u_zc=u_zc,
+                    c_v=c_v % n_zc,
+                    d_u=root_distance(u_zc, n_zc),
+                )
+            )
+
+    if len(slots) < total_preambles:
+        # every root was walked and the cell still cannot offer that many
+        raise ValueError(
+            f"configuration yields only {len(slots)} preambles out of "
+            f"{total_preambles} (n_cs={n_cs}, high_speed_flag={high_speed_flag})"
+        )
+
+    return slots
