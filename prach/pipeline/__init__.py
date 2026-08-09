@@ -1,10 +1,18 @@
-from .config import PRACHConfiguration
+from .config import (
+    AccessAttempt,
+    Deployment,
+    PRACHConfiguration,
+    settings_from_dict,
+)
 from .block import Block
 from .transmitter import Transmitter
 
 # https://docs.python.org/3/tutorial/modules.html#importing-from-a-package
 __all__ = [
+    "AccessAttempt",
+    "Deployment",
     "PRACHConfiguration",
+    "settings_from_dict",
     "Block",
     "Transmitter",
 ]

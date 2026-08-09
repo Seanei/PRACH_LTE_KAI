@@ -13,9 +13,7 @@ from prach.pipeline.spec import (
 
 
 def make_config(config_index):
-    config = PRACHConfiguration()
-    config.config_index = config_index
-    return config
+    return PRACHConfiguration(config_index=config_index)
 
 
 def noise_frame(rng):

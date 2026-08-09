@@ -34,8 +34,7 @@ def make_preamble(preamble_format, num_sf, rng):
 class TestSubframeRoundTrip(unittest.TestCase):
 
     def test_preamble_survives_mapping_and_demapping(self):
-        config = PRACHConfiguration()
-        config.config_index = 0
+        config = PRACHConfiguration(config_index=0)
 
         rng = np.random.default_rng(42)
         preamble, sequence = make_preamble(config.preamble_format, 1, rng)
@@ -53,8 +52,7 @@ class TestSubframeRoundTrip(unittest.TestCase):
     def test_preamble_split_over_two_frames_survives(self):
         # index 31 puts a format 1 opportunity in subframe 9; the preamble
         # spans two subframes and so runs into the next frame
-        config = PRACHConfiguration()
-        config.config_index = 31
+        config = PRACHConfiguration(config_index=31)
 
         rng = np.random.default_rng(7)
         preamble, sequence = make_preamble(config.preamble_format, 2, rng)

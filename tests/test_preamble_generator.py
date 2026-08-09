@@ -3,7 +3,7 @@ import pathlib
 import struct
 import mmap
 
-from prach.pipeline import PRACHConfiguration
+from prach.pipeline import settings_from_dict
 from prach.blocks.ue import PreambleGeneratorBlock
 
 
@@ -44,9 +44,10 @@ class TestPreambleGenerator(unittest.TestCase):
 
         cls.amount = len(cls.test_preambles)
 
-    def perform_test(self, config, test_preamble):
-        block = PreambleGeneratorBlock(PRACHConfiguration.from_dict(config))
-        preamble = block.generate()
+    def perform_test(self, settings, test_preamble):
+        config, attempt, _deployment = settings_from_dict(settings)
+        block = PreambleGeneratorBlock(config)
+        preamble = block.generate(attempt)
 
         tolerance = 1e-7
 
