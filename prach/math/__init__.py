@@ -62,14 +62,42 @@ def idft(numbers):
     return result
 
 
-def multi_bef_detect(waveform: np.ndarray,
-                     reference: np.ndarray) -> np.ndarray:
+def multi_bef_detect(waveform: np.ndarray, reference: np.ndarray) -> np.ndarray:
     waveform = np.asarray(waveform, dtype=complex)
     reference = np.asarray(reference, dtype=complex)
 
     if waveform.shape != reference.shape:
-        raise ValueError(
-            "waveform and reference must have the same shape"
-        )
+        raise ValueError("waveform and reference must have the same shape")
 
     return waveform * np.conj(reference)
+
+
+def fft(waveform: np.ndarray) -> np.ndarray:
+    n = len(waveform)
+
+    if n <= 1:
+        return waveform
+
+    power = 2
+    while power * power <= n:
+        if n % power == 0:
+            break
+        p += 1
+    else:
+        p = n
+
+    if p == n:
+        return dft(waveform)
+
+    rem = n // p
+    for r in range(p):
+        div_fft = fft(waveform[r::p])
+    result = np.zeros(n, dtype=complex)
+
+    k0 = np.arange(p)[:, np.newaxis]
+    k1 = np.arange(rem)
+    k = k0 * rem + k1
+    for r in range(p):
+        angel = np.exp(-2j * math.pi * k * r / n)
+        result[k] += div_fft[r] * angel
+    return result
