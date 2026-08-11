@@ -72,7 +72,7 @@ def multi_bef_detect(waveform: np.ndarray, reference: np.ndarray) -> np.ndarray:
     return waveform * np.conj(reference)
 
 
-def fft(waveform: np.ndarray) -> np.ndarray:
+def fft(waveform: np.ndarray):
     n = len(waveform)
 
     if n <= 1:
@@ -82,22 +82,22 @@ def fft(waveform: np.ndarray) -> np.ndarray:
     while power * power <= n:
         if n % power == 0:
             break
-        p += 1
+        power += 1
     else:
-        p = n
+        power = n
 
-    if p == n:
+    if power == n:
         return dft(waveform)
 
-    rem = n // p
-    for r in range(p):
-        div_fft = fft(waveform[r::p])
+    rem = n // power
+    for r in range(power):
+        div_fft = fft(waveform[r::power])
     result = np.zeros(n, dtype=complex)
 
-    k0 = np.arange(p)[:, np.newaxis]
+    k0 = np.arange(power)[:, np.newaxis]
     k1 = np.arange(rem)
     k = k0 * rem + k1
-    for r in range(p):
+    for r in range(power):
         angel = np.exp(-2j * math.pi * k * r / n)
         result[k] += div_fft[r] * angel
     return result
