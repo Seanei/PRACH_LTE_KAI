@@ -101,3 +101,38 @@ def fft(waveform: np.ndarray):
         angel = np.exp(-2j * math.pi * k * r / n)
         result[k] += div_fft[r] * angel
     return result
+
+def ifft (waveform: np.ndarray, top_level_flag = True):
+    if top_level_flag:
+        waveform = np.ndarray(waveform, dtype = complex)
+    n = len(waveform)
+    if n <= 1:
+        return waveform
+
+    power = 2
+    while power * power <= n:
+        if n % power == 0:
+            break
+        power += 1
+    else:
+        power = n
+
+    if power == n:
+        return idft(waveform)
+
+    rem = n // power
+    for r in range(power):
+        div_ifft = ifft(waveform[r::power], top_level_flag = False)
+
+    result = np.zeros(n, dtype = complex)
+    k0 = np.arange(power)[:, np.newaxis]
+    k1 = np.arange(rem)
+    k = k0 * q + k1
+
+    for r in range(power):
+        angle = np.exp(2j * math.pi * k * r / n)
+        result += div_ifft[r] * angle
+    if top_level_flag:
+        return result / n
+    else:
+        return result
