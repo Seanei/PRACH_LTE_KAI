@@ -5,6 +5,7 @@ from prach.math import idft
 from prach.math import fft
 from prach.math import ifft
 
+
 class TestZadoffChu(unittest.TestCase):
 
     def test_length(self):
@@ -319,6 +320,7 @@ class TestIDFT(unittest.TestCase):
                 for a, e in zip(actual, expected):
                     self.assertComplexAlmostEqual(a, e)
 
+
 class TestFFT(unittest.TestCase):
     def assertComplexAlmostEqual(self, actual, expected, places=12):
         self.assertAlmostEqual(actual.real, expected.real, places=places)
@@ -455,6 +457,7 @@ class TestFFT(unittest.TestCase):
                 for a, e in zip(actual, expected):
                     self.assertComplexAlmostEqual(a, e)
 
+
 class TestIFFT(unittest.TestCase):
     def assertComplexAlmostEqual(self, actual, expected, places=12):
         self.assertAlmostEqual(actual.real, expected.real, places=places)
@@ -590,6 +593,7 @@ class TestIFFT(unittest.TestCase):
 
                 for a, e in zip(actual, expected):
                     self.assertComplexAlmostEqual(a, e)
+
 
 if __name__ == "__main__":
     unittest.main()
