@@ -105,7 +105,8 @@ def fft(waveform: np.ndarray):
             result[k] = s
     return result
 
-def ifft (waveform: np.ndarray, top_level_flag = True):
+
+def ifft(waveform: np.ndarray, top_level_flag=True):
     n = len(waveform)
     if n <= 1:
         return waveform
@@ -124,9 +125,9 @@ def ifft (waveform: np.ndarray, top_level_flag = True):
     rem = n // power
     div_ifft = []
     for r in range(power):
-        div_ifft.append(ifft(waveform[r::power], top_level_flag = False))
+        div_ifft.append(ifft(waveform[r::power], top_level_flag=False))
 
-    result = np.zeros(n, dtype = complex)
+    result = np.zeros(n, dtype=complex)
     for k1 in range(rem):
         for k0 in range(power):
             k = k0 * rem + k1
