@@ -95,12 +95,14 @@ def fft(waveform: np.ndarray):
         div_fft.append(fft(waveform[r::power]))
     result = np.zeros(n, dtype=complex)
 
-    k0 = np.arange(power)[:, np.newaxis]
-    k1 = np.arange(rem)
-    k = k0 * rem + k1
-    for r in range(power):
-        angel = np.exp(-2j * math.pi * k * r / n)
-        result[k] += div_fft[r][k1] * angel
+    for k1 in range(rem):
+        for k0 in range(power):
+            k = k0 * rem + k1
+            s = 0j
+            for r in range(power):
+                angel = np.exp(-2j * math.pi * k * r / n)
+                s += div_fft[r][k1] * angel
+            result[k] = s
     return result
 
 def ifft (waveform: np.ndarray, top_level_flag = True):
@@ -125,13 +127,14 @@ def ifft (waveform: np.ndarray, top_level_flag = True):
         div_ifft.append(ifft(waveform[r::power], top_level_flag = False))
 
     result = np.zeros(n, dtype = complex)
-    k0 = np.arange(power)[:, np.newaxis]
-    k1 = np.arange(rem)
-    k = k0 * rem + k1
-
-    for r in range(power):
-        angle = np.exp(2j * math.pi * k * r / n)
-        result[k] += div_ifft[r][k1] * angle
+    for k1 in range(rem):
+        for k0 in range(power):
+            k = k0 * rem + k1
+            s = 0j
+            for r in range(power):
+                angle = np.exp(2j * math.pi * k * r / n)
+                s += div_ifft[r][k1] * angle
+            result[k] = s
     if top_level_flag:
         return result / n
     else:
