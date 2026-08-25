@@ -101,7 +101,6 @@ class Receiver:
             for demapper, frame in zip(self.subframe_demappers, branch_frames)
         ]
 
-
         counts = {len(windows) for windows in per_branch}
         if len(counts) != 1:
             raise ValueError(
