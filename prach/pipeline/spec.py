@@ -1,5 +1,6 @@
 import math
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import List, Sequence
 
 # 3GPP TS 136.211: Table 5.7.2-1
@@ -236,6 +237,11 @@ N_FFT = int(F_S / DELTA_F_RA)
 
 SAMPLES_PER_SUBFRAME = int(F_S * 1e-3)
 
+# 3GPP TS 136.213: 4.2.3
+# Timing advance is reported as a count of T_A_GRANULARITY samples of F_S
+T_A_GRANULARITY = 16
+T_A_MAX = 1282
+
 
 def prach_subcarrier_start(n_ul_rb: int, n_ra_prb_offset: int) -> int:
     """Index of the first PRACH subcarrier in the uplink grid (TS 36.211 5.7.3).
@@ -275,6 +281,7 @@ def n_cs_from_config(
     return int(n_cs)
 
 
+@lru_cache(maxsize=None)
 def root_distance(u_zc: int, n_zc: int = N_ZC_FDD) -> int:
     """d_u, the shift a one subcarrier frequency offset causes (TS 36.211 5.7.2).
     """
@@ -287,15 +294,25 @@ def get_shifts(n_zc: int, n_cs: int, u_zc: int = 0) -> List[int]:
 
     u_zc = 0 selects the unrestricted set, the actual root value selects
     the restricted set
+
+    Worked out once per (sequence, zone, root) and kept - a cell offers the
+    same shifts for as long as it is configured the same way, and a detector
+    asks after them on every frame. What is kept is a tuple, so that a caller
+    cannot alter what the next one is handed; this returns a list of its own
+    either way.
     """
-    return (
+    return list(_shifts(n_zc, n_cs, u_zc))
+
+
+@lru_cache(maxsize=None)
+def _shifts(n_zc: int, n_cs: int, u_zc: int) -> tuple:
+    return tuple(
         _get_shifts_unrestricted(n_zc, n_cs)
         if u_zc == 0
         else _get_shifts_restricted(n_zc, n_cs, u_zc)
     )
 
 
-# TODO: cache it?
 def _get_shifts_unrestricted(n_zc: int, n_cs: int) -> List[int]:
     if n_cs == 0:
         return [0]
@@ -304,7 +321,6 @@ def _get_shifts_unrestricted(n_zc: int, n_cs: int) -> List[int]:
     return [v * n_cs for v in range(num_shifts)]
 
 
-# TODO: cache it?
 def _get_shifts_restricted(n_zc: int, n_cs: int, u_zc: int) -> List[int]:
     if n_cs == 0:
         return [0]
@@ -356,6 +372,46 @@ def build_preamble_map(
     n_zc: int = N_ZC_FDD,
     u_zc_table: Sequence[int] = U_ZC_FDD,
     total_preambles: int = TOTAL_PREAMBLES,
+) -> List[PreambleSlot]:
+    """Which (root, cyclic shift) carries each preamble a cell offers.
+
+    The map follows from the configuration alone, and a detector walks it on
+    every frame, so the answer for the table this project runs on is kept.
+    A caller naming a table of its own is not a case worth keeping - it is
+    tests asking what happens at the edges - and is worked out afresh.
+    """
+    if u_zc_table is U_ZC_FDD:
+        return list(_preamble_map(
+            root_sequence_index, n_cs, high_speed_flag, n_zc, total_preambles
+        ))
+
+    return _build_preamble_map(
+        root_sequence_index, n_cs, high_speed_flag, n_zc, u_zc_table,
+        total_preambles,
+    )
+
+
+@lru_cache(maxsize=None)
+def _preamble_map(
+    root_sequence_index: int,
+    n_cs: int,
+    high_speed_flag: int,
+    n_zc: int,
+    total_preambles: int,
+) -> tuple:
+    return tuple(_build_preamble_map(
+        root_sequence_index, n_cs, high_speed_flag, n_zc, U_ZC_FDD,
+        total_preambles,
+    ))
+
+
+def _build_preamble_map(
+    root_sequence_index: int,
+    n_cs: int,
+    high_speed_flag: int,
+    n_zc: int,
+    u_zc_table: Sequence[int],
+    total_preambles: int,
 ) -> List[PreambleSlot]:
     if total_preambles <= 0:
         raise ValueError(f"total_preambles must be positive, got {total_preambles}")

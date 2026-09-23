@@ -9,7 +9,7 @@ from copy import deepcopy
 from typing import Any, Dict, Optional
 
 import yaml
-from prach.pipeline import PRACHConfiguration
+from prach.pipeline import settings_from_dict
 
 
 def load_yaml(path: pathlib.Path) -> Dict[str, Any]:
@@ -67,11 +67,20 @@ def main(argv=None):
 
     merged = build_config_from_files(base_config_path, override_config_path)
 
-    config = PRACHConfiguration.from_dict(merged)
+    config, attempt, deployment = settings_from_dict(merged)
 
+    # a settings file states all three together, because it drives both ends
+    # of a simulated link; they are printed apart because the two ends are not
+    # entitled to the same things
     print()
-    print("PRACH configuration:")
+    print("Cell configuration (signalled):")
     pprint.pprint(vars(config))
+    print()
+    print("Access attempt (the terminal's):")
+    pprint.pprint(vars(attempt))
+    print()
+    print("Deployment (the base station's):")
+    pprint.pprint(vars(deployment))
 
 
 if __name__ == "__main__":
