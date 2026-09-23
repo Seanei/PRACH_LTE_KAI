@@ -80,7 +80,6 @@ class PRACHDetector(Block):
         start = (length - round(slot.c_v * oversampling)) % length
         return (start + np.arange(width)) % length
 
-
     @staticmethod
     def _timing_advance(delay_bins: int, length: int) -> int:
         delay_seconds = delay_bins / (length * DELTA_F_RA)
