@@ -72,71 +72,114 @@ def multi_bef_detect(waveform: np.ndarray, reference: np.ndarray) -> np.ndarray:
     return waveform * np.conj(reference)
 
 
-def fft(waveform: np.ndarray):
-    n = len(waveform)
+def check_for_power2(n: int) -> bool:
+    if n <= 0:
+        return False
+    while n % 2 == 0:
+        n //= 2
+    return n == 1
 
+
+def next_power2(n: int) -> int:
+    if n <= 2:
+        return 2
+    power = 2
+    while power < n:
+        power *= 2
+    return power
+
+
+def fft_butterfly(waveform: np.ndarray) -> np.ndarray:
+    n = len(waveform)
     if n <= 1:
         return waveform
 
-    power = 2
-    while power * power <= n:
-        if n % power == 0:
-            break
-        power += 1
-    else:
-        power = n
+    even = fft_butterfly(waveform[0::2])
+    odd = fft_butterfly(waveform[1::2])
 
-    if power == n:
-        return dft(waveform)
+    half_n = n // 2
+    angles = -2j * math.pi * np.arange(half_n) / n
+    twiddle_factors = np.exp(angles)
 
-    rem = n // power
-    div_fft = []
-    for r in range(power):
-        div_fft.append(fft(waveform[r::power]))
+    odd_twiddled = odd * twiddle_factors
+
     result = np.zeros(n, dtype=complex)
-
-    for k1 in range(rem):
-        for k0 in range(power):
-            k = k0 * rem + k1
-            s = 0j
-            for r in range(power):
-                angel = np.exp(-2j * math.pi * k * r / n)
-                s += div_fft[r][k1] * angel
-            result[k] = s
+    result[:half_n] = even + odd_twiddled
+    result[half_n:] = even - odd_twiddled
     return result
 
 
-def ifft(waveform: np.ndarray, top_level_flag=True):
+def ifft_butterfly(waveform: np.ndarray) -> np.ndarray:
     n = len(waveform)
     if n <= 1:
         return waveform
 
-    power = 2
-    while power * power <= n:
-        if n % power == 0:
-            break
-        power += 1
-    else:
-        power = n
+    even = ifft_butterfly(waveform[0::2])
+    odd = ifft_butterfly(waveform[1::2])
 
-    if power == n:
-        return idft(waveform)
+    half_n = n // 2
+    angles = 2j * math.pi * np.arange(half_n) / n
+    twiddle_factors = np.exp(angles)
 
-    rem = n // power
-    div_ifft = []
-    for r in range(power):
-        div_ifft.append(ifft(waveform[r::power], top_level_flag=False))
+    odd_twiddled = odd * twiddle_factors
 
     result = np.zeros(n, dtype=complex)
-    for k1 in range(rem):
-        for k0 in range(power):
-            k = k0 * rem + k1
-            s = 0j
-            for r in range(power):
-                angle = np.exp(2j * math.pi * k * r / n)
-                s += div_ifft[r][k1] * angle
-            result[k] = s
-    if top_level_flag:
-        return result / n
-    else:
-        return result
+    result[:half_n] = even + odd_twiddled
+    result[half_n:] = even - odd_twiddled
+    return result
+
+
+def fft(waveform: np.ndarray) -> np.ndarray:
+    n = len(waveform)
+    if n <= 1:
+        return waveform
+
+    if check_for_power2(n):
+        return fft_butterfly(waveform)
+
+    m = next_power2(2 * n - 1)
+
+    angles = np.pi * (np.arange(n) ** 2) / n
+    chirp = np.exp(-1j * angles)
+
+    a = np.zeros(m, dtype=complex)
+    a[:n] = waveform * chirp
+
+    b = np.zeros(m, dtype=complex)
+    b[:n] = np.conj(chirp)
+    for i in range(1, n):
+        b[m - i] = np.conj(chirp[i])
+
+    fa = fft_butterfly(a)
+    fb = fft_butterfly(b)
+    fc = ifft_butterfly(fa * fb) / m
+
+    return fc[:n] * chirp
+
+
+def ifft(waveform: np.ndarray) -> np.ndarray:
+    n = len(waveform)
+    if n <= 1:
+        return waveform
+
+    if check_for_power2(n):
+        return ifft_butterfly(waveform) / n
+
+    m = next_power2(2 * n - 1)
+
+    angles = np.pi * (np.arange(n) ** 2) / n
+    chirp = np.exp(1j * angles)
+
+    a = np.zeros(m, dtype=complex)
+    a[:n] = waveform * chirp
+
+    b = np.zeros(m, dtype=complex)
+    b[:n] = np.conj(chirp)
+    for i in range(1, n):
+        b[m - i] = np.conj(chirp[i])
+
+    fa = fft_butterfly(a)
+    fb = fft_butterfly(b)
+    fc = ifft_butterfly(fa * fb) / m
+
+    return (fc[:n] * chirp) / n
