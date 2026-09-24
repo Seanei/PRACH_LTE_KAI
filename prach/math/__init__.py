@@ -130,6 +130,7 @@ def ifft_butterfly(waveform: np.ndarray) -> np.ndarray:
 
 
 def fft(waveform: np.ndarray) -> np.ndarray:
+    waveform = np.asarray(waveform, dtype=complex)
     n = len(waveform)
     if n <= 1:
         return waveform
@@ -146,8 +147,9 @@ def fft(waveform: np.ndarray) -> np.ndarray:
     a[:n] = waveform * chirp
 
     b = np.zeros(m, dtype=complex)
-    b[:n] = np.conj(chirp)
+    b[0] = np.conj(chirp[0])
     for i in range(1, n):
+        b[i] = np.conj(chirp[i])
         b[m - i] = np.conj(chirp[i])
 
     fa = fft_butterfly(a)
@@ -158,6 +160,7 @@ def fft(waveform: np.ndarray) -> np.ndarray:
 
 
 def ifft(waveform: np.ndarray) -> np.ndarray:
+    waveform = np.asarray(waveform, dtype=complex)
     n = len(waveform)
     if n <= 1:
         return waveform
@@ -174,12 +177,13 @@ def ifft(waveform: np.ndarray) -> np.ndarray:
     a[:n] = waveform * chirp
 
     b = np.zeros(m, dtype=complex)
-    b[:n] = np.conj(chirp)
+    b[0] = np.conj(chirp[0])
     for i in range(1, n):
+        b[i] = np.conj(chirp[i])
         b[m - i] = np.conj(chirp[i])
 
-    fa = fft_butterfly(a)
-    fb = fft_butterfly(b)
-    fc = ifft_butterfly(fa * fb) / m
+    fa = ifft_butterfly(a)
+    fb = ifft_butterfly(b)
+    fc = fft_butterfly(fa * fb) / m
 
     return (fc[:n] * chirp) / n
