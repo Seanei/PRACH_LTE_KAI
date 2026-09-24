@@ -62,14 +62,128 @@ def idft(numbers):
     return result
 
 
-def multi_bef_detect(waveform: np.ndarray,
-                     reference: np.ndarray) -> np.ndarray:
+def multi_bef_detect(waveform: np.ndarray, reference: np.ndarray) -> np.ndarray:
     waveform = np.asarray(waveform, dtype=complex)
     reference = np.asarray(reference, dtype=complex)
 
     if waveform.shape != reference.shape:
-        raise ValueError(
-            "waveform and reference must have the same shape"
-        )
+        raise ValueError("waveform and reference must have the same shape")
 
     return waveform * np.conj(reference)
+
+
+def check_for_power2(n: int) -> bool:
+    if n <= 0:
+        return False
+    while n % 2 == 0:
+        n //= 2
+    return n == 1
+
+
+def next_power2(n: int) -> int:
+    if n <= 2:
+        return 2
+    power = 2
+    while power < n:
+        power *= 2
+    return power
+
+
+def fft_butterfly(waveform: np.ndarray) -> np.ndarray:
+    n = len(waveform)
+    if n <= 1:
+        return waveform
+
+    even = fft_butterfly(waveform[0::2])
+    odd = fft_butterfly(waveform[1::2])
+
+    half_n = n // 2
+    angles = -2j * math.pi * np.arange(half_n) / n
+    twiddle_factors = np.exp(angles)
+
+    odd_twiddled = odd * twiddle_factors
+
+    result = np.zeros(n, dtype=complex)
+    result[:half_n] = even + odd_twiddled
+    result[half_n:] = even - odd_twiddled
+    return result
+
+
+def ifft_butterfly(waveform: np.ndarray) -> np.ndarray:
+    n = len(waveform)
+    if n <= 1:
+        return waveform
+
+    even = ifft_butterfly(waveform[0::2])
+    odd = ifft_butterfly(waveform[1::2])
+
+    half_n = n // 2
+    angles = 2j * math.pi * np.arange(half_n) / n
+    twiddle_factors = np.exp(angles)
+
+    odd_twiddled = odd * twiddle_factors
+
+    result = np.zeros(n, dtype=complex)
+    result[:half_n] = even + odd_twiddled
+    result[half_n:] = even - odd_twiddled
+    return result
+
+
+def fft(waveform: np.ndarray) -> np.ndarray:
+    waveform = np.asarray(waveform, dtype=complex)
+    n = len(waveform)
+    if n <= 1:
+        return waveform
+
+    if check_for_power2(n):
+        return fft_butterfly(waveform)
+
+    m = next_power2(2 * n - 1)
+
+    angles = np.pi * (np.arange(n) ** 2) / n
+    chirp = np.exp(-1j * angles)
+
+    a = np.zeros(m, dtype=complex)
+    a[:n] = waveform * chirp
+
+    b = np.zeros(m, dtype=complex)
+    b[0] = np.conj(chirp[0])
+    for i in range(1, n):
+        b[i] = np.conj(chirp[i])
+        b[m - i] = np.conj(chirp[i])
+
+    fa = fft_butterfly(a)
+    fb = fft_butterfly(b)
+    fc = ifft_butterfly(fa * fb) / m
+
+    return fc[:n] * chirp
+
+
+def ifft(waveform: np.ndarray) -> np.ndarray:
+    waveform = np.asarray(waveform, dtype=complex)
+    n = len(waveform)
+    if n <= 1:
+        return waveform
+
+    if check_for_power2(n):
+        return ifft_butterfly(waveform) / n
+
+    m = next_power2(2 * n - 1)
+
+    angles = np.pi * (np.arange(n) ** 2) / n
+    chirp = np.exp(1j * angles)
+
+    a = np.zeros(m, dtype=complex)
+    a[:n] = waveform * chirp
+
+    b = np.zeros(m, dtype=complex)
+    b[0] = np.conj(chirp[0])
+    for i in range(1, n):
+        b[i] = np.conj(chirp[i])
+        b[m - i] = np.conj(chirp[i])
+
+    fa = ifft_butterfly(a)
+    fb = ifft_butterfly(b)
+    fc = fft_butterfly(fa * fb) / m
+
+    return (fc[:n] * chirp) / n
